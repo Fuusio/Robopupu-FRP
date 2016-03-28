@@ -148,6 +148,7 @@ public abstract class AbstractNode<IN, OUT> implements Node<IN, OUT> {
     /**
      * Detaches the given output {@link Node} by removing from the set of output {@link Node}s.
      * @param outputNode A {@link Node}.
+     * @return A {@code boolean} value indicating if the {@link Node} was removed.
      */
     @Override
     public boolean detach(final Node<OUT, ?> outputNode) {
@@ -238,7 +239,7 @@ public abstract class AbstractNode<IN, OUT> implements Node<IN, OUT> {
      * @return The created error message as a {@link String}.
      */
     protected String createErrorMessage(final String message, final String... args) {
-        final String formattedMessage = String.format(message, args);
+        final String formattedMessage = String.format(message, (Object[]) args);
         return "Error in nodes " + getClass().getSimpleName() + " : " + formattedMessage;
     }
 }

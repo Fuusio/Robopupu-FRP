@@ -56,7 +56,7 @@ public class NodeTest {
 
     @Test
     public void test_attach() {
-        final Graph<Integer> graph = Graph.create();
+        final Graph<Integer> graph = Graph.begin();
 
         final Node<Integer, Integer> node0 = new SimpleNode<>();
         final Node<Integer, Integer> node1 = new SimpleNode<>();
@@ -72,7 +72,7 @@ public class NodeTest {
 
     @Test
     public void test_skip() {
-        final Graph<Integer> graph = Graph.create();
+        final Graph<Integer> graph = Graph.begin();
 
         final Node<Integer, Integer> node0 = new SimpleNode<>();
         final Node<Integer, Integer> node1 = new SimpleNode<>();
@@ -88,7 +88,7 @@ public class NodeTest {
 
     @Test
     public void test_take() {
-        final Graph<Integer> graph = Graph.create();
+        final Graph<Integer> graph = Graph.begin();
 
         final Node<Integer, Integer> node0 = new SimpleNode<>();
         final Node<Integer, Integer> node1 = new SimpleNode<>();
@@ -104,7 +104,7 @@ public class NodeTest {
 
     @Test
     public void test_filter() {
-        final Graph<Integer> graph = Graph.create();
+        final Graph<Integer> graph = Graph.begin();
 
         mEndNode.reset();
 
@@ -117,7 +117,7 @@ public class NodeTest {
     @Test
     public void test_list() {
 
-        Graph<List<Integer>> graph = Graph.create();
+        Graph<List<Integer>> graph = Graph.begin();
 
         mEndNode.reset();
 
@@ -126,7 +126,7 @@ public class NodeTest {
 
         assertTrue(mEndNode.received(0, 1, 2));
 
-        graph = Graph.create();
+        graph = Graph.begin();
 
         mEndNode.reset();
 
@@ -179,13 +179,13 @@ public class NodeTest {
     }
 
     private Node<Response, Response> createGraph(final Authenticator authenticator) {
-        final Graph<Response> graph = Graph.create();
+        final Graph<Response> graph = Graph.begin();
 
-        Node nAuthCode = graph.action(response -> authenticator.onRequestAuthCode()).node();
+        Node nAuthCode = graph.execute(response -> authenticator.onRequestAuthCode()).node();
 
         graph.<Response>find(nAuthCode).
                 filter(response -> response.statusCode == 200).
-                action(authenticator::onAuthenticationSucceeded);
+                execute(authenticator::onAuthenticationSucceeded);
 
         Node nStatus400 = graph.<Response>find(nAuthCode).filter(response -> response.statusCode == 400).node();
         Node nStatus401 = graph.<Response>find(nAuthCode).filter(response -> response.statusCode == 401).node();

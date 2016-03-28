@@ -12,8 +12,22 @@
     tools:context="com.robopupu.graph.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <TextView
+    <ScrollView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!" />
+        android:id="@+id/scroll_view"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="false"
+        android:layout_alignParentEnd="false"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/text_view"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </ScrollView>
 </RelativeLayout>

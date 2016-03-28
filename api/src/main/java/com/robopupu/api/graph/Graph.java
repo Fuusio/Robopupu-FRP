@@ -20,11 +20,11 @@ public class Graph<T> {
     private Node<?,?> mCurrentNode;
     private Object mPendingTag;
 
-    private Graph() {
+    protected Graph() {
         mTaggedNodes = new HashMap<>();
     }
 
-    public static <IN> Graph<IN> create() {
+    public static <IN> Graph<IN> begin() {
         return new Graph<>();
     }
 
@@ -90,7 +90,7 @@ public class Graph<T> {
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public Graph<T> next(final Node<T, ?> node) {
+    public <OUT> Graph<OUT> next(final Node<T, OUT> node) {
         if (mPendingTag != null) {
             mTaggedNodes.put(mPendingTag, node);
             mPendingTag = null;
@@ -104,7 +104,7 @@ public class Graph<T> {
             mBeginNode = node;
         }
         mCurrentNode = node;
-        return this;
+        return (Graph<OUT>)this;
     }
 
     /**
@@ -114,8 +114,8 @@ public class Graph<T> {
      * @param node A {@link Node}.
      * @return This {@link Graph}.
      */
-    public Graph<T> next(final Object tag, final Node<T,?> node) {
-        final Graph<T> graph =  find(tag);
+    public <OUT> Graph<OUT> next(final Object tag, final Node<T,OUT> node) {
+        final Graph<T> graph = find(tag);
         return graph.next(node);
     }
 
@@ -127,8 +127,8 @@ public class Graph<T> {
      * @param node A {@link Node}.
      * @return This {@link Graph}.
      */
-    public Graph<T> next(final Object findTag, final Object attachTag, final Node<T, ?> node) {
-        final Graph<T> graph =  find(findTag);
+    public <OUT> Graph<OUT> next(final Object findTag, final Object attachTag, final Node<T, OUT> node) {
+        final Graph<T> graph = find(findTag);
         return graph.tag(attachTag).next(node);
     }
 
@@ -171,7 +171,7 @@ public class Graph<T> {
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public Graph<T> action(final Action<T> action) {
+    public Graph<T> execute(final Action<T> action) {
         final ActionNode<T, T> node = new ActionNode<>(action);
         return next(node);
     }
@@ -182,8 +182,8 @@ public class Graph<T> {
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public Graph<T> function(final Function<T, ?> function) {
-        final FunctionNode<T, ?> node = new FunctionNode<>(function);
+    public <OUT> Graph<OUT> evaluate(final Function<T, OUT> function) {
+        final FunctionNode<T, OUT> node = new FunctionNode<>(function);
         return next(node);
     }
 

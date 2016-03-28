@@ -34,6 +34,7 @@ public interface Node<IN, OUT> {
     /**
      * Detaches the given output {@link Node} by removing from the set of output {@link Node}s.
      * @param outputNode A {@link Node}.
+     * @return A {@code boolean} value indicating if the {@link Node} was removed.
      */
     boolean detach(final Node<OUT, ?> outputNode);
 }
