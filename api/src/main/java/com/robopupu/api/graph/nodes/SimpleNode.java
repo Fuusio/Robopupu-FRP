@@ -1,4 +1,7 @@
-package com.robopupu.api.graph;
+package com.robopupu.api.graph.nodes;
+
+import com.robopupu.api.graph.AbstractNode;
+import com.robopupu.api.graph.OutputNode;
 
 public class SimpleNode<IN, OUT> extends AbstractNode<IN, OUT> {
 
@@ -8,13 +11,9 @@ public class SimpleNode<IN, OUT> extends AbstractNode<IN, OUT> {
     public SimpleNode() {
     }
 
-   /**
-     * Invoked by {@link SimpleNode#onInput(Object)} when the given input {@link Object} has been received.
-     * @param input The input {@link Object}.
-     * @return The output {@link Object}.
-     */
     @SuppressWarnings("unchecked")
-    protected OUT processInput(final IN input) {
+    @Override
+    protected OUT processInput(final OutputNode<IN> outputNode, final IN input) {
         if (input != null) {
             try {
                 return (OUT) input;

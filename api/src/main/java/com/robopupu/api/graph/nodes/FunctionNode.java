@@ -2,7 +2,7 @@ package com.robopupu.api.graph.nodes;
 
 import com.robopupu.api.graph.AbstractNode;
 import com.robopupu.api.graph.Function;
-import com.robopupu.api.graph.Node;
+import com.robopupu.api.graph.OutputNode;
 
 /**
  * {@link FunctionNode} ...
@@ -16,7 +16,7 @@ public class FunctionNode<IN, OUT> extends AbstractNode<IN, OUT> {
     }
 
     @Override
-    protected OUT processInput(final IN input) {
+    protected OUT processInput(final OutputNode<IN> outputNode, final IN input) {
         if (mFunction != null) {
             return mFunction.eval(input);
         } else {

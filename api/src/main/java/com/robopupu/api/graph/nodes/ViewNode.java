@@ -3,25 +3,24 @@ package com.robopupu.api.graph.nodes;
 import android.view.View;
 
 import com.robopupu.api.graph.AbstractNode;
+import com.robopupu.api.graph.AbstractOutputNode;
 
-public class ViewNode<IN, OUT extends View> extends AbstractNode<IN, OUT> implements View.OnClickListener {
+public class ViewNode extends AbstractOutputNode<View> implements View.OnClickListener {
 
-    protected OUT mView;
+    protected View mView;
 
-    public ViewNode(final OUT view) {
+    public ViewNode(final View view) {
         mView = view;
         mView.setOnClickListener(this);
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    protected OUT processInput(final IN input) {
-        return null;
+    public View getView() {
+        return mView;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void onClick(final View view) {
-        out((OUT)view);
+        out(view);
     }
 }

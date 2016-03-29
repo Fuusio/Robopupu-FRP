@@ -2,24 +2,17 @@ package com.robopupu.api.graph.nodes;
 
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.View;
 import android.widget.TextView;
 
-import com.robopupu.api.graph.AbstractNode;
+import com.robopupu.api.graph.AbstractOutputNode;
 
-public class TextViewNode<IN> extends AbstractNode<IN, String> implements TextWatcher {
+public class TextViewNode extends AbstractOutputNode<String> implements TextWatcher {
 
     private TextView mTextView;
 
     public TextViewNode(final TextView textView) {
         mTextView = textView;
         mTextView.addTextChangedListener(this);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected String processInput(final IN input) {
-        return null;
     }
 
     @Override

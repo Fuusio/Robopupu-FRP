@@ -1,7 +1,8 @@
 package com.robopupu.api.graph.nodes;
 
 import com.robopupu.api.graph.AbstractNode;
-import com.robopupu.api.graph.Node;
+import com.robopupu.api.graph.InputNode;
+import com.robopupu.api.graph.OutputNode;
 
 import java.util.ArrayList;
 
@@ -20,8 +21,8 @@ public class DeferNode<IN> extends AbstractNode<IN, IN> {
     }
 
     @Override
-    protected IN processInput(final IN input) {
-        if (hasOutputs()) {
+    protected IN processInput(final OutputNode<IN> outputNode, final IN input) {
+        if (hasInputNodes()) {
             return input;
         } else {
             final int bufferSize = mBuffer.size();
@@ -35,7 +36,7 @@ public class DeferNode<IN> extends AbstractNode<IN, IN> {
     }
 
     @Override
-    protected void onAttached(final Node<IN, ?> node) {
+    protected void onAttached(final InputNode<IN> inputNode) {
         if (!mBuffer.isEmpty()) {
             final ArrayList<IN> buffer = new ArrayList<>(mBuffer);
             mBuffer.clear();

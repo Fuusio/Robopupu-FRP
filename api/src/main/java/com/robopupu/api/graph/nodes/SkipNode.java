@@ -1,7 +1,12 @@
 package com.robopupu.api.graph.nodes;
 
 import com.robopupu.api.graph.AbstractNode;
+import com.robopupu.api.graph.OutputNode;
 
+/**
+ * {@link SkipNode} TODO
+ * @param <IN>
+ */
 public class SkipNode<IN> extends AbstractNode<IN, IN> {
 
     private int mStepCounter;
@@ -14,7 +19,7 @@ public class SkipNode<IN> extends AbstractNode<IN, IN> {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected IN processInput(final IN input) {
+    protected IN processInput(final OutputNode<IN> outputNode, final IN input) {
         if (mStepCounter >= mSteps) {
             return input;
         } else {

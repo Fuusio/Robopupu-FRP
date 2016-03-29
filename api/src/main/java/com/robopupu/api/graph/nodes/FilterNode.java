@@ -1,7 +1,7 @@
 package com.robopupu.api.graph.nodes;
 
 import com.robopupu.api.graph.AbstractNode;
-import com.robopupu.api.graph.Node;
+import com.robopupu.api.graph.OutputNode;
 import com.robopupu.api.graph.functions.BooleanFunction;
 
 public class FilterNode<IN> extends AbstractNode<IN, IN> {
@@ -21,7 +21,7 @@ public class FilterNode<IN> extends AbstractNode<IN, IN> {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected IN processInput(final IN input) {
+    protected IN processInput(final OutputNode<IN> outputNode, final IN input) {
         if (input != null) {
             if (mCondition != null) {
                 if (mCondition.eval(input)) {

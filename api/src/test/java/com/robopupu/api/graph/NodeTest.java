@@ -19,6 +19,7 @@ import android.test.suitebuilder.annotation.SmallTest;
 
 import com.robopupu.api.graph.nodes.ActionNode;
 import com.robopupu.api.graph.nodes.ListNode;
+import com.robopupu.api.graph.nodes.SimpleNode;
 
 import org.junit.After;
 import org.junit.Before;
@@ -58,14 +59,17 @@ public class NodeTest {
     public void test_attach() {
         Graph<Integer> graph = Graph.begin();
 
-        final Node<Integer, Integer> node0 = new SimpleNode<>();
+        final Node<Integer, Integer> beginNode = new SimpleNode<>();
         final Node<Integer, Integer> node1 = new SimpleNode<>();
         final Node<Integer, Integer> node2 = new SimpleNode<>();
 
         mEndNode.reset();
 
-        graph.next(node0).next(node1).next(node2).next(mEndNode);
-        graph.getBeginNode().onInput(1).onInput(2).onInput(3);
+        graph.next(beginNode).next(node1).next(node2).next(mEndNode);
+
+        for (int i = 1; i < 4; i++) {
+            beginNode.onInput(i);
+        }
 
         assertTrue(mEndNode.received(1, 2, 3));
 
@@ -77,7 +81,8 @@ public class NodeTest {
                 next(mEndNode);
 
         mEndNode.reset();
-        graph.getBeginNode().onInput(20);
+        final Node<Integer, Integer> functionNode = graph.getBeginNode();
+        functionNode.onInput(20);
         assertTrue(mEndNode.received(1000));
     }
 
@@ -91,8 +96,13 @@ public class NodeTest {
 
         mEndNode.reset();
 
-        graph.skip(3).next(node1).next(node2).next(mEndNode);
-        graph.getBeginNode().onInput(1).onInput(2).onInput(3).onInput(4).onInput(5).onInput(6);
+        graph.skip(3).next(node0).next(node1).next(node2).next(mEndNode);
+
+        final Node<Integer, Integer> beginNode = graph.getBeginNode();
+
+        for (int i = 1; i < 7; i++) {
+            beginNode.onInput(i);
+        }
 
         assertTrue(mEndNode.received(4, 5, 6));
     }
@@ -103,22 +113,42 @@ public class NodeTest {
         Graph<Integer> graph = Graph.begin();
         graph.repeat(0).next(mEndNode);
         mEndNode.reset();
-        graph.getBeginNode().onInput(1);
+        Node<Integer, Integer> beginNode = graph.getBeginNode();
+        beginNode.onInput(1);
         assertTrue(mEndNode.received());
 
         graph = Graph.begin();
         graph.repeat(1).next(mEndNode);
         mEndNode.reset();
-        graph.getBeginNode().onInput(1);
+        beginNode = graph.getBeginNode();
+        beginNode.onInput(1);
         assertTrue(mEndNode.received(1));
 
         graph = Graph.begin();
         graph.repeat(5).next(mEndNode);
         mEndNode.reset();
-        graph.getBeginNode().onInput(1);
+        beginNode = graph.getBeginNode();
+        beginNode.onInput(1);
         assertTrue(mEndNode.received(1, 1, 1, 1, 1));
     }
 
+    @Test
+    public void test_skipWhile() {
+
+        final Graph<Integer> graph = Graph.begin();
+        graph.skipWhile(input -> input > 3).next(mEndNode);
+        mEndNode.reset();
+        Node<Integer, Integer> beginNode = graph.getBeginNode();
+        beginNode.onInput(5);
+        beginNode.onInput(6);
+        beginNode.onInput(7);
+        beginNode.onInput(1);
+        beginNode.onInput(8);
+        beginNode.onInput(9);
+        beginNode.onInput(2);
+        beginNode.onInput(3);
+        assertTrue(mEndNode.received(1, 8, 9, 2, 3));
+    }
 
     @Test
     public void test_take() {
@@ -130,8 +160,13 @@ public class NodeTest {
 
         mEndNode.reset();
 
-        graph.take(3).next(node1).next(node2).next(mEndNode);
-        graph.getBeginNode().onInput(1).onInput(2).onInput(3).onInput(4).onInput(5).onInput(6);
+        graph.take(3).next(node0).next(node1).next(node2).next(mEndNode);
+
+        final Node<Integer, Integer> beginNode = graph.getBeginNode();
+
+        for (int i = 1; i < 7; i++) {
+            beginNode.onInput(i);
+        }
 
         assertTrue(mEndNode.received(1, 2, 3));
     }
@@ -143,7 +178,12 @@ public class NodeTest {
         mEndNode.reset();
 
         graph.filter(value -> value > 3).next(mEndNode);
-        graph.getBeginNode().onInput(1).onInput(2).onInput(3).onInput(4).onInput(5).onInput(6);
+
+        final Node<Integer, Integer> beginNode = graph.getBeginNode();
+
+        for (int i = 1; i < 7; i++) {
+            beginNode.onInput(i);
+        }
 
         assertTrue(mEndNode.received(4, 5, 6));
     }
@@ -151,22 +191,18 @@ public class NodeTest {
     @Test
     public void test_list() {
 
-        Graph<List<Integer>> graph = Graph.begin();
-
+        Graph<Integer> graph = Graph.from(mIntegerList);
+        graph.take(3).next(mEndNode);
         mEndNode.reset();
-
-        graph.next(new ListNode<>()).take(3).next(mEndNode);
-        graph.getBeginNode().onInput(mIntegerList);
-
+        ListNode<Integer> listNode = graph.getBeginNode();
+        listNode.emit();
         assertTrue(mEndNode.received(0, 1, 2));
 
-        graph = Graph.begin();
-
+        graph = Graph.from(mIntegerList);
+        graph.skip(7).next(mEndNode);
         mEndNode.reset();
-
-        graph.next(new ListNode<>()).skip(7).next(mEndNode);
-        graph.getBeginNode().onInput(mIntegerList);
-
+        listNode = graph.getBeginNode();
+        listNode.emit();
         assertTrue(mEndNode.received(7, 8, 9));
     }
 
@@ -266,18 +302,18 @@ public class NodeTest {
         }
 
         @Override
-        public Integer processInput(final Integer input) {
+        public Integer processInput(final OutputNode<Integer> outputNode, final Integer input) {
             mReceivedInputs.add(input);
             return input;
         }
 
         @Override
-        public void onCompleted(final Node<?, Integer> outputNode) {
+        public void onCompleted(final OutputNode<Integer> outputNode) {
             mCompleted = true;
         }
 
         @Override
-        public void onError(final Node<?, Integer> inputNode, final Throwable throwable) {
+        public void onError(final OutputNode<Integer> outputNode, final Throwable throwable) {
             mErrorReceived = true;
         }
 

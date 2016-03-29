@@ -1,8 +1,13 @@
 package com.robopupu.api.graph.nodes;
 
 import com.robopupu.api.graph.AbstractNode;
+import com.robopupu.api.graph.OutputNode;
 import com.robopupu.api.graph.functions.BooleanFunction;
 
+/**
+ * {@link SkipWhileNode} TODO
+ * @param <IN>
+ */
 public class SkipWhileNode<IN> extends AbstractNode<IN, IN> {
 
     private BooleanFunction<IN> mCondition;
@@ -19,7 +24,7 @@ public class SkipWhileNode<IN> extends AbstractNode<IN, IN> {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected IN processInput(final IN input) {
+    protected IN processInput(final OutputNode<IN> outputNode, final IN input) {
         if (input != null && !mSkippingEnded) {
             if (mCondition.eval(input)) {
                 return null;

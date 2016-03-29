@@ -4,10 +4,14 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.robopupu.api.graph.AbstractNode;
-import com.robopupu.api.graph.Node;
+import com.robopupu.api.graph.OutputNode;
 
 import java.util.HashMap;
 
+/**
+ * {@link TimerNode} TODO
+ * @param <IN>
+ */
 public class TimerNode<IN> extends AbstractNode<IN, IN> {
 
     private final HashMap<Long, TimerHandle> mTimerHandles;
@@ -26,12 +30,17 @@ public class TimerNode<IN> extends AbstractNode<IN, IN> {
         mRepeatCount = repeatCount;
     }
 
-
     @Override
-    public Node<IN, IN> onInput(IN input) {
+    public void onInput(final OutputNode<IN> outputNode, final IN input) {
+        start(input);
+    }
+
+    /**
+     * Stars a new timer.
+     */
+    public void start(final IN input) {
         final TimerHandle handle = new TimerHandle(this, input, mDelay, mInterval, mRepeatCount);
         handle.start();
-        return this;
     }
 
     protected void timeout(final TimerHandle handle, final IN input) {
@@ -40,8 +49,6 @@ public class TimerNode<IN> extends AbstractNode<IN, IN> {
         if (handle.isFinished()) {
             remove(handle);
         }
-
-        System.out.println("TIME: " + System.currentTimeMillis());
     }
 
     protected void remove(final TimerHandle handle) {

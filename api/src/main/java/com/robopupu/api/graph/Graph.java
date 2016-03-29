@@ -5,12 +5,14 @@ import com.robopupu.api.graph.nodes.ActionNode;
 import com.robopupu.api.graph.nodes.BufferNode;
 import com.robopupu.api.graph.nodes.FilterNode;
 import com.robopupu.api.graph.nodes.FunctionNode;
+import com.robopupu.api.graph.nodes.ListNode;
 import com.robopupu.api.graph.nodes.RepeatNode;
 import com.robopupu.api.graph.nodes.SkipNode;
 import com.robopupu.api.graph.nodes.SkipWhileNode;
 import com.robopupu.api.graph.nodes.TakeNode;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * {@link Graph} is a builder utility for constructing graphcs consisting of {@link Node}s.
@@ -19,10 +21,10 @@ import java.util.HashMap;
  */
 public class Graph<T> {
 
-    protected final HashMap<Object, Node<?,?>> mTaggedNodes;
+    protected final HashMap<Object, OutputNode<?>> mTaggedNodes;
 
-    private Node<?,?> mBeginNode;
-    private Node<?,?> mCurrentNode;
+    private OutputNode<T> mBeginNode;
+    private OutputNode<?> mCurrentNode;
     private Object mPendingTag;
 
     protected Graph() {
@@ -31,6 +33,15 @@ public class Graph<T> {
 
     public static <OUT> Graph<OUT> begin() {
         return new Graph<>();
+    }
+
+    /**
+     * Adds the given {@link InputNode}s as end nodes.
+     * @param inputNodes A list of {@link InputNode}s.
+     */
+    @SuppressWarnings("unchecked")
+    public <IN> void end(final InputNode<IN>... inputNodes) {
+        ((OutputNode<IN>)mCurrentNode).attach(inputNodes);
     }
 
     /**
@@ -43,14 +54,49 @@ public class Graph<T> {
     }
 
     /**
-     * Gets the begin {@link Node} for this {@link Graph}.
-     * @param <IN> The input type of the {@link Node}.
-     * @param <OUT> The output type of the {@link Node}.
-     * @return The begin {@link Node}.
+     * Constructs a new {@link Graph} with the given {@link OutputNode} as a begin node.
+     * @param outputNode A {@link OutputNode}
+     * @param <OUT> The output type.
+     * @return A {@link Graph}.
+     */
+    public static <OUT> Graph<OUT> from(final OutputNode<OUT> outputNode) {
+        final Graph<OUT> graph = new Graph<>();
+         graph.setBeginNode(outputNode);
+        return graph;
+    }
+
+    /**
+     * Constructs a new {@link Graph} with a {@link ListNode} as a begin node.
+     * @param list A {@link List}
+     * @param <OUT> The output type.
+     * @return A {@link Graph}.
+     */
+    public static <OUT> Graph<OUT> from(final List<OUT> list) {
+        return from(new ListNode<OUT>(list));
+    }
+
+    /**
+     * Sets the begin {@link OutputNode}.
+     * @param outputNode A {@link OutputNode}.
+     */
+    protected void setBeginNode(final OutputNode<T> outputNode) {
+        if (mPendingTag != null) {
+            mTaggedNodes.put(mPendingTag, outputNode);
+            mPendingTag = null;
+        } else {
+            mTaggedNodes.put(outputNode, outputNode);
+        }
+        mBeginNode = outputNode;
+        mCurrentNode = outputNode;
+    }
+
+    /**
+     * Gets the begin {@link OutputNode} for this {@link Graph}.
+     * @return The begin {@link OutputNode}.
      */
     @SuppressWarnings("unchecked")
-    public <IN,OUT> Node<IN,OUT> getBeginNode() {
-        return (Node<IN,OUT>)mBeginNode;
+    public <NODE extends OutputNode<?>> NODE getBeginNode() {
+        return (NODE)mBeginNode;
     }
 
     /**
@@ -66,15 +112,14 @@ public class Graph<T> {
     }
 
     /**
-     * Finds a {@link Node} tagged with the given tag {@link Object}.
+     * Finds a {@link OutputNode} tagged with the given tag {@link Object}.
      * @param tag The tag {@link Object}.
-     * @param <IN> The input type of the {@link Node}.
-     * @param <OUT> The output type of the {@link Node}.
-     * @return This {@link Graph}.
+     * @param <OUT> The output type of the {@link OutputNode}.
+     * @return The found {@link OutputNode}. May return {@code null}.
      */
     @SuppressWarnings("unchecked")
-    public <IN,OUT> Node<IN,OUT> findNode(final Object tag) {
-        return (Node<IN, OUT>)mTaggedNodes.get(tag);
+    public <OUT> OutputNode<OUT> findNode(final Object tag) {
+        return (OutputNode<OUT>)mTaggedNodes.get(tag);
     }
 
     /**
@@ -103,11 +148,13 @@ public class Graph<T> {
         }
 
         if (mCurrentNode != null) {
-            ((Node<?, T>)mCurrentNode).attach(node);
-        } else {
-            mBeginNode = node;
+            ((OutputNode<T>)mCurrentNode).attach(node);
         }
         mCurrentNode = node;
+
+        if (mBeginNode == null) {
+            mBeginNode = (OutputNode<T>)node;
+        }
         return (Graph<OUT>)this;
     }
 

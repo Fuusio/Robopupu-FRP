@@ -1,18 +1,26 @@
 package com.robopupu.api.graph.nodes;
 
-import com.robopupu.api.graph.AbstractNode;
-import com.robopupu.api.graph.Node;
+import com.robopupu.api.graph.AbstractOutputNode;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class ListNode<OUT> extends AbstractNode<List<OUT>, OUT> {
+public class ListNode<OUT> extends AbstractOutputNode<OUT> {
 
-    @Override
-    public Node<List<OUT>, OUT> onInput(final List<OUT> input) {
-        for (final OUT output : input) {
+    protected ArrayList<OUT> mList;
+
+    public ListNode(final List<OUT> list) {
+        mList = new ArrayList<>();
+        mList.addAll(list);
+    }
+
+    /**
+     * Invoked to emit the contents of this {@link ListNode}.
+     */
+    public void emit() {
+        for (final OUT output : mList) {
             out(output);
         }
-        onCompleted(this);
-        return this;
+        completed();
     }
 }

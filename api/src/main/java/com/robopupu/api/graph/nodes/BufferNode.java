@@ -1,6 +1,7 @@
 package com.robopupu.api.graph.nodes;
 
 import com.robopupu.api.graph.AbstractNode;
+import com.robopupu.api.graph.OutputNode;
 
 import java.util.ArrayList;
 
@@ -16,7 +17,7 @@ public class BufferNode<IN> extends AbstractNode<IN, IN> {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected IN processInput(final IN input) {
+    protected IN processInput(final OutputNode<IN> outputNode, final IN input) {
         if (mBuffer.size() < mCapacity) {
             mBuffer.add(input);
             return null;
