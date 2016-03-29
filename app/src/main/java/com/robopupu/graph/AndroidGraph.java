@@ -27,8 +27,23 @@ public class AndroidGraph<T> extends Graph<T> {
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public AndroidGraph<View> onClick(final View view) {
-        return (AndroidGraph<View>)next(new ViewNode<>(view));
+    public static AndroidGraph<View> from(final View view) {
+        final AndroidGraph<View> graph = new AndroidGraph<>();
+        graph.setBeginNode(new ViewNode(view));
+        return graph;
+    }
+
+
+    /**
+     * Attaches an {@link ViewNode} for the given {@link View} to produce click outputs.
+     * @param view A {@link View}.
+     * @return This {@link Graph}.
+     */
+    @SuppressWarnings("unchecked")
+    public static AndroidGraph<View> onClick(final View view) {
+        final AndroidGraph<View> graph = new AndroidGraph<>();
+        graph.setBeginNode(new ViewNode(view));
+        return graph;
     }
 
     /**
@@ -38,8 +53,10 @@ public class AndroidGraph<T> extends Graph<T> {
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public AndroidGraph<String> onText(final TextView view) {
-        return (AndroidGraph<String>)next(new TextViewNode<>(view));
+    public static AndroidGraph<String> onText(final TextView view) {
+        final AndroidGraph<String> graph = new AndroidGraph<>();
+        graph.setBeginNode(new TextViewNode(view));
+        return graph;
     }
 
     /**

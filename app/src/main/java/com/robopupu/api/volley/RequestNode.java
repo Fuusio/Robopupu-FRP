@@ -4,6 +4,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 import com.robopupu.api.graph.AbstractNode;
 import com.robopupu.api.graph.Node;
+import com.robopupu.api.graph.OutputNode;
 
 /**
  * {@link RequestNode} extends {@link AbstractNode} to implement {@link Node} for making REST
@@ -23,12 +24,11 @@ public class RequestNode<IN, OUT> extends AbstractNode<IN, OUT> implements Reque
     }
 
     @Override
-    public Node<IN, OUT> onInput(final IN input) {
+    public void onInput(final OutputNode<IN> outputNode, final IN input) {
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(mRequestBuilder.getContext());
         }
         mRequestQueue.add(mRequest);
-        return null;
     }
 
     @Override
