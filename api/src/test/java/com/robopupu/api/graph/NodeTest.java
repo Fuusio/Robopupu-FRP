@@ -56,7 +56,7 @@ public class NodeTest {
 
     @Test
     public void test_attach() {
-        final Graph<Integer> graph = Graph.begin();
+        Graph<Integer> graph = Graph.begin();
 
         final Node<Integer, Integer> node0 = new SimpleNode<>();
         final Node<Integer, Integer> node1 = new SimpleNode<>();
@@ -68,6 +68,17 @@ public class NodeTest {
         graph.getBeginNode().onInput(1).onInput(2).onInput(3);
 
         assertTrue(mEndNode.received(1, 2, 3));
+
+        graph = Graph.begin();
+        graph.eval(input -> Integer.toString(input)).
+                eval(input -> Integer.parseInt(input)).
+                eval(input -> input > 10).
+                eval(input -> input ? 1000 : 0).
+                next(mEndNode);
+
+        mEndNode.reset();
+        graph.getBeginNode().onInput(20);
+        assertTrue(mEndNode.received(1000));
     }
 
     @Test
@@ -85,6 +96,29 @@ public class NodeTest {
 
         assertTrue(mEndNode.received(4, 5, 6));
     }
+
+    @Test
+    public void test_repeat() {
+
+        Graph<Integer> graph = Graph.begin();
+        graph.repeat(0).next(mEndNode);
+        mEndNode.reset();
+        graph.getBeginNode().onInput(1);
+        assertTrue(mEndNode.received());
+
+        graph = Graph.begin();
+        graph.repeat(1).next(mEndNode);
+        mEndNode.reset();
+        graph.getBeginNode().onInput(1);
+        assertTrue(mEndNode.received(1));
+
+        graph = Graph.begin();
+        graph.repeat(5).next(mEndNode);
+        mEndNode.reset();
+        graph.getBeginNode().onInput(1);
+        assertTrue(mEndNode.received(1, 1, 1, 1, 1));
+    }
+
 
     @Test
     public void test_take() {
@@ -121,7 +155,7 @@ public class NodeTest {
 
         mEndNode.reset();
 
-        graph.next(new ListNode<>()).<Integer>to().take(3).next(mEndNode);
+        graph.next(new ListNode<>()).take(3).next(mEndNode);
         graph.getBeginNode().onInput(mIntegerList);
 
         assertTrue(mEndNode.received(0, 1, 2));
@@ -130,7 +164,7 @@ public class NodeTest {
 
         mEndNode.reset();
 
-        graph.next(new ListNode<>()).<Integer>to().skip(7).next(mEndNode);
+        graph.next(new ListNode<>()).skip(7).next(mEndNode);
         graph.getBeginNode().onInput(mIntegerList);
 
         assertTrue(mEndNode.received(7, 8, 9));
@@ -181,11 +215,11 @@ public class NodeTest {
     private Node<Response, Response> createGraph(final Authenticator authenticator) {
         final Graph<Response> graph = Graph.begin();
 
-        Node nAuthCode = graph.execute(response -> authenticator.onRequestAuthCode()).node();
+        Node nAuthCode = graph.exec(response -> authenticator.onRequestAuthCode()).node();
 
         graph.<Response>find(nAuthCode).
                 filter(response -> response.statusCode == 200).
-                execute(authenticator::onAuthenticationSucceeded);
+                exec(authenticator::onAuthenticationSucceeded);
 
         Node nStatus400 = graph.<Response>find(nAuthCode).filter(response -> response.statusCode == 400).node();
         Node nStatus401 = graph.<Response>find(nAuthCode).filter(response -> response.statusCode == 401).node();

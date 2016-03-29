@@ -2,15 +2,20 @@ package com.robopupu.api.graph;
 
 import com.robopupu.api.graph.functions.BooleanFunction;
 import com.robopupu.api.graph.nodes.ActionNode;
+import com.robopupu.api.graph.nodes.BufferNode;
 import com.robopupu.api.graph.nodes.FilterNode;
 import com.robopupu.api.graph.nodes.FunctionNode;
+import com.robopupu.api.graph.nodes.RepeatNode;
 import com.robopupu.api.graph.nodes.SkipNode;
+import com.robopupu.api.graph.nodes.SkipWhileNode;
 import com.robopupu.api.graph.nodes.TakeNode;
 
 import java.util.HashMap;
 
 /**
  * {@link Graph} is a builder utility for constructing graphcs consisting of {@link Node}s.
+ *
+ * @param <T> The parametrized output type of the {@link Graph}.
  */
 public class Graph<T> {
 
@@ -24,18 +29,17 @@ public class Graph<T> {
         mTaggedNodes = new HashMap<>();
     }
 
-    public static <IN> Graph<IN> begin() {
+    public static <OUT> Graph<OUT> begin() {
         return new Graph<>();
     }
 
     /**
-     * Converts the expected input type of this {@link Graph}.
-     * @param <IN> The new type.
+     * Converts this {@link Graph}.
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public <IN> Graph<IN> to() {
-        return (Graph<IN>)this;
+    public <G extends Graph<?>> G to() {
+        return (G)this;
     }
 
     /**
@@ -52,13 +56,13 @@ public class Graph<T> {
     /**
      * Finds a {@link Node} tagged with the given tag {@link Object} and sets it to be current tag.
      * @param tag The tag {@link Object}.
-     * @param <IN> The input type of the current {@link Node}.
+     * @param <OUT> The input type of the current {@link Node}.
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public <IN> Graph<IN> find(final Object tag) {
+    public <OUT> Graph<OUT> find(final Object tag) {
         mCurrentNode = mTaggedNodes.get(tag);
-        return (Graph<IN>)this;
+        return (Graph<OUT>)this;
     }
 
     /**
@@ -114,7 +118,7 @@ public class Graph<T> {
      * @param node A {@link Node}.
      * @return This {@link Graph}.
      */
-    public <OUT> Graph<OUT> next(final Object tag, final Node<T,OUT> node) {
+    public <OUT> Graph<OUT> next(final Object tag, final Node<T, OUT> node) {
         final Graph<T> graph = find(tag);
         return graph.next(node);
     }
@@ -139,8 +143,27 @@ public class Graph<T> {
      */
     @SuppressWarnings("unchecked")
     public Graph<T> filter(final BooleanFunction<T> condition) {
-        final FilterNode<T> node = new FilterNode<>(condition);
-        return next(node);
+        return next(new FilterNode<>(condition));
+    }
+
+    /**
+     * Attaches a {@link BufferNode} with the given capacity value after the current {@link Node}.
+     * @param capacity The buffer capacity value.
+     * @return This {@link Graph}.
+     */
+    @SuppressWarnings("unchecked")
+    public Graph<T> buffer(final int capacity) {
+        return next(new BufferNode<>(capacity));
+    }
+
+    /**
+     * Attaches a {@link RepeatNode} with the given times parameter value after the current {@link Node}.
+     * @param times The steps value.
+     * @return This {@link Graph}.
+     */
+    @SuppressWarnings("unchecked")
+    public Graph<T> repeat(final int times) {
+        return next(new RepeatNode<>(times));
     }
 
     /**
@@ -150,9 +173,19 @@ public class Graph<T> {
      */
     @SuppressWarnings("unchecked")
     public Graph<T> skip(final int steps) {
-        final SkipNode<T> node = new SkipNode<>(steps);
-        return next(node);
+        return next(new SkipNode<>(steps));
     }
+
+    /**
+     * Attaches a {@link SkipWhileNode} with the given condition after the current {@link Node}.
+     * @param condition The condition as a {@link BooleanFunction}.
+     * @return This {@link Graph}.
+     */
+    @SuppressWarnings("unchecked")
+    public Graph<T> skipWhile(final BooleanFunction<T> condition) {
+        return next(new SkipWhileNode<>(condition));
+    }
+
 
     /**
      * Attaches a {@link TakeNode} with the given steps parameter value after the current {@link Node}.
@@ -161,19 +194,17 @@ public class Graph<T> {
      */
     @SuppressWarnings("unchecked")
     public Graph<T> take(final int steps) {
-        final TakeNode<T> node = new TakeNode<>(steps);
-        return next(node);
+        return next(new TakeNode<>(steps));
     }
 
     /**
      * Attaches an {@link ActionNode} with the given action after the current {@link Node}.
-     * @param action The action as a {@link Action}.
+     * @param action The action as an {@link Action}.
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public Graph<T> execute(final Action<T> action) {
-        final ActionNode<T, T> node = new ActionNode<>(action);
-        return next(node);
+    public Graph<T> exec(final Action<T> action) {
+        return next(new ActionNode<>(action));
     }
 
     /**
@@ -182,9 +213,8 @@ public class Graph<T> {
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public <OUT> Graph<OUT> evaluate(final Function<T, OUT> function) {
-        final FunctionNode<T, OUT> node = new FunctionNode<>(function);
-        return next(node);
+    public <OUT> Graph<OUT> eval(final Function<T, OUT> function) {
+        return next(new FunctionNode<>(function));
     }
 
     /**

@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.robopupu.api.graph.Graph;
 import com.robopupu.api.volley.GsonRequest;
 import com.robopupu.api.volley.RequestBuilder;
 
@@ -28,13 +29,19 @@ public class MainActivity extends AppCompatActivity {
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         mJokesTextView = (TextView) findViewById(R.id.text_view);
         mJokesTextView.setTextColor(Color.DKGRAY);
+
         mScrollView = (ScrollView) findViewById(R.id.scroll_view);
 
         final RequestBuilder<JokeResponse> getJoke =
-                new RequestBuilder<JokeResponse>(getApplicationContext(), "http://api.icndb.com/jokes/random").
+                new RequestBuilder<JokeResponse>(this, "http://api.icndb.com/jokes/random").
                     request(new GsonRequest<>(JokeResponse.class));
 
-        MyGraph.begin().onClick(fab).request(getJoke).execute(this::addJoke);
+        AndroidGraph.begin().
+                filter(response -> response != null).
+                <AndroidGraph<JokeResponse>>to().
+                request(getJoke);
+
+        AndroidGraph.begin().onClick(fab).request(getJoke).exec(this::addJoke);
     }
 
     private void addJoke(final JokeResponse response) {
@@ -46,6 +53,4 @@ public class MainActivity extends AppCompatActivity {
 
         mScrollView.fullScroll(View.FOCUS_DOWN);
     }
-
-
 }
