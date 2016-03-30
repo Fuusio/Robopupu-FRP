@@ -1,6 +1,5 @@
 package com.robopupu.graph;
 
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -10,8 +9,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.robopupu.api.graph.Graph;
-import com.robopupu.api.volley.GsonRequest;
-import com.robopupu.api.volley.RequestBuilder;
+import com.robopupu.api.network.volley.GsonRequest;
+import com.robopupu.api.network.volley.RequestBuilder;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -28,18 +27,16 @@ public class MainActivity extends AppCompatActivity {
 
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         mJokesTextView = (TextView) findViewById(R.id.text_view);
-        mJokesTextView.setTextColor(Color.DKGRAY);
-
         mScrollView = (ScrollView) findViewById(R.id.scroll_view);
 
         final RequestBuilder<JokeResponse> getJoke =
                 new RequestBuilder<JokeResponse>(this, "http://api.icndb.com/jokes/random").
                     request(new GsonRequest<>(JokeResponse.class));
 
-        AndroidGraph.onClick(fab).request(getJoke).exec(this::addJoke);
+        Graph.onClick(fab).request(getJoke).exec(this::displayJoke);
     }
 
-    private void addJoke(final JokeResponse response) {
+    private void displayJoke(final JokeResponse response) {
         final String joke = response.getValue().getJoke();
         final String formattedJoke = joke.replace("&quot;", "\"");
 

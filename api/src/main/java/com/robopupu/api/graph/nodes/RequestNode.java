@@ -1,10 +1,11 @@
-package com.robopupu.api.volley;
+package com.robopupu.api.graph.nodes;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.Volley;
 import com.robopupu.api.graph.AbstractNode;
 import com.robopupu.api.graph.Node;
 import com.robopupu.api.graph.OutputNode;
+import com.robopupu.api.network.RequestCallback;
+import com.robopupu.api.network.RequestDelegate;
+import com.robopupu.api.network.RequestError;
 
 /**
  * {@link RequestNode} extends {@link AbstractNode} to implement {@link Node} for making REST
@@ -12,23 +13,15 @@ import com.robopupu.api.graph.OutputNode;
  */
 public class RequestNode<IN, OUT> extends AbstractNode<IN, OUT> implements RequestCallback<OUT> {
 
-    private final BaseRequest<OUT> mRequest;
-    private final RequestBuilder mRequestBuilder;
+    private final RequestDelegate<OUT> mRequestDelegate;
 
-    private RequestQueue mRequestQueue;
-
-    public RequestNode(final RequestBuilder<OUT> builder) {
-        mRequest = builder.build();
-        mRequest.setCallback(this);
-        mRequestBuilder = builder;
+    public RequestNode(final RequestDelegate<OUT> requestDelegate) {
+        mRequestDelegate = requestDelegate;
     }
 
     @Override
     public void onInput(final OutputNode<IN> outputNode, final IN input) {
-        if (mRequestQueue == null) {
-            mRequestQueue = Volley.newRequestQueue(mRequestBuilder.getContext());
-        }
-        mRequestQueue.add(mRequest);
+        mRequestDelegate.executeRequest(this);
     }
 
     @Override

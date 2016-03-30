@@ -1,13 +1,16 @@
-package com.robopupu.api.volley;
+package com.robopupu.api.network.volley;
 
 import android.content.Context;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.RequestQueue;
 import com.android.volley.RetryPolicy;
+import com.android.volley.toolbox.Volley;
 import com.robopupu.api.network.HeaderRequestField;
 import com.robopupu.api.network.HttpHeaders;
 import com.robopupu.api.network.HttpParams;
+import com.robopupu.api.network.RequestCallback;
+import com.robopupu.api.network.RequestDelegate;
 import com.robopupu.api.util.KeyValue;
 
 import java.io.UnsupportedEncodingException;
@@ -19,7 +22,7 @@ import java.util.List;
  * {@link RequestBuilder} is a utility that is used to build a complete URL from given base URL,
  * relative URL, query params, and path params.
  */
-public class RequestBuilder<T_Response> {
+public class RequestBuilder<T_Response> implements RequestDelegate<T_Response> {
 
     protected static final String PATH_SEPARATOR = "/";
 
@@ -35,6 +38,7 @@ public class RequestBuilder<T_Response> {
     private String mRelativeUrl;
     private BaseRequest<T_Response> mRequest;
     private RetryPolicy mRetryPolicy;
+    private RequestQueue mRequestQueue;
     private String mTag;
     private int mTimeout; // In milliseconds
     private String mUrl;
@@ -53,8 +57,8 @@ public class RequestBuilder<T_Response> {
         mParams = new HttpParams();
     }
 
-    public RequestBuilder(final String baseUrl, final String relativeUrl) {
-        this(null);
+    public RequestBuilder(final Context context, final String baseUrl, final String relativeUrl) {
+        this(context, null);
         mBaseUrl = baseUrl;
         mRelativeUrl = relativeUrl;
     }
@@ -300,13 +304,25 @@ public class RequestBuilder<T_Response> {
     }
 
     /**
-     * Builds the set {@link BaseRequest} and prepares if for execution using the given request
+     * Builds the set {@link BaseRequest} and prepares if for the execution using the given request
      * properties.
      *
-     * @return A {@link BaseRequest} which is ready to added into {@link RequestQueue}.
+     * @return A {@link BaseRequest} which is ready to be added into {@link RequestQueue}.
      */
     public BaseRequest<T_Response> build() {
         mRequest.setBuild(true);
         return initialise(mRequest);
+    }
+
+    @Override
+    public void executeRequest(final RequestCallback<T_Response> callback) {
+        if (mRequestQueue == null) {
+            mRequestQueue = Volley.newRequestQueue(getContext());
+        }
+        if (!mRequest.isBuild()) {
+            build();
+        }
+        mRequest.setCallback(callback);
+        mRequestQueue.add(mRequest);
     }
 }

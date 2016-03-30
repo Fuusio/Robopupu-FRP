@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.robopupu.api.volley;
+package com.robopupu.api.network.volley;
 
 import android.support.annotation.NonNull;
 
@@ -25,6 +25,8 @@ import com.android.volley.Response.ErrorListener;
 import com.android.volley.Response.Listener;
 import com.android.volley.VolleyError;
 import com.robopupu.api.network.HttpHeaders;
+import com.robopupu.api.network.RequestCallback;
+import com.robopupu.api.network.RequestError;
 
 import java.util.Map;
 
@@ -85,9 +87,19 @@ public abstract class BaseRequest<T_Response> extends Request<T_Response> {
      */
     private static <T_Response> ErrorListener createErrorListener(final RequestCallback<T_Response> requestCallback) {
         if (requestCallback != null) {
-            return volleyError -> requestCallback.onError(new RequestError(volleyError));
+            return volleyError -> requestCallback.onError(createRequestError(volleyError));
         }
         return null;
+    }
+
+    public static RequestError createRequestError(final VolleyError volleyError) {
+        final RequestError requestError = new RequestError();
+        requestError.setCause(volleyError.getCause());
+        requestError.setHeaders(volleyError.networkResponse.headers);
+        requestError.setMessage(volleyError.getMessage());
+        requestError.setNetworkTime(volleyError.getNetworkTimeMs());
+        requestError.setStatusCode(volleyError.networkResponse.statusCode);
+        return requestError;
     }
 
     /**

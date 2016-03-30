@@ -13,8 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.robopupu.api.volley;
+package com.robopupu.api.network;
 
+/**
+ * {@link RequestCallback} defines a callback interface for requests.
+ * @param <T_Response> The type of the response object.
+ */
 public interface RequestCallback<T_Response> {
 
     void onResponse(T_Response response);

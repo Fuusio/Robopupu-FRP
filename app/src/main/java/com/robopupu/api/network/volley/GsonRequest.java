@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.robopupu.api.volley;
+package com.robopupu.api.network.volley;
 
 import android.util.Log;
 
@@ -23,6 +23,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.google.gson.Gson;
+import com.robopupu.api.network.RequestCallback;
 
 import java.io.UnsupportedEncodingException;
 

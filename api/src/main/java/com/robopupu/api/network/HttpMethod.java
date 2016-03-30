@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 package com.robopupu.api.network;
-
-import com.android.volley.Request;
-
 /**
  * {@link HttpMethod} defines an enumerated type for representing HTTP methods.
  */
 public enum HttpMethod {
 
-    GET("GET", Request.Method.GET),
-    POST("POST", Request.Method.POST),
-    PUT("PUT", Request.Method.PUT),
-    DELETE("DELETE", Request.Method.DELETE),
-    HEAD("HEAD", Request.Method.HEAD),
-    OPTIONS("OPTIONS", Request.Method.OPTIONS),
-    TRACE("TRACE", Request.Method.TRACE);
+    /**
+     * Supported request methods.
+     */
+    DEPRECATED_GET_OR_POST("DEPRECATED_GET_OR_POST", -1),
+    GET("GET", 0),
+    POST("POST", 1),
+    PUT("PUT", 2),
+    DELETE("DELETE", 3),
+    HEAD("HEAD", 4),
+    OPTIONS("OPTIONS", 5),
+    TRACE("TRACE", 6),
+    PATCH("PATCH", 7);
 
     private final int mId;
     private final String mName;

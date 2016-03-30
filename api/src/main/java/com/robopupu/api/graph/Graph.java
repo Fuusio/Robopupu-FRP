@@ -1,5 +1,8 @@
 package com.robopupu.api.graph;
 
+import android.view.View;
+import android.widget.TextView;
+
 import com.robopupu.api.graph.functions.BooleanFunction;
 import com.robopupu.api.graph.nodes.ActionNode;
 import com.robopupu.api.graph.nodes.BufferNode;
@@ -7,9 +10,13 @@ import com.robopupu.api.graph.nodes.FilterNode;
 import com.robopupu.api.graph.nodes.FunctionNode;
 import com.robopupu.api.graph.nodes.ListNode;
 import com.robopupu.api.graph.nodes.RepeatNode;
+import com.robopupu.api.graph.nodes.RequestNode;
 import com.robopupu.api.graph.nodes.SkipNode;
 import com.robopupu.api.graph.nodes.SkipWhileNode;
 import com.robopupu.api.graph.nodes.TakeNode;
+import com.robopupu.api.graph.nodes.TextViewNode;
+import com.robopupu.api.graph.nodes.ViewNode;
+import com.robopupu.api.network.RequestDelegate;
 
 import java.util.HashMap;
 import java.util.List;
@@ -271,5 +278,40 @@ public class Graph<T> {
     @SuppressWarnings("unchecked")
     public <IN, OUT> Node<IN, OUT> node() {
         return (Node<IN, OUT>)mCurrentNode;
+    }
+
+    /**
+     * Attaches an {@link ViewNode} for the given {@link View} to produce click outputs.
+     * @param view A {@link View}.
+     * @return This {@link Graph}.
+     */
+    @SuppressWarnings("unchecked")
+    public static Graph<View> onClick(final View view) {
+        final Graph<View> graph = new Graph<>();
+        graph.setBeginNode(new ViewNode(view));
+        return graph;
+    }
+
+    /**
+     * Attaches an {@link TextViewNode} for the given {@link TextView} to produce inputted text
+     * as an output.
+     * @param view A {@link TextView}.
+     * @return This {@link Graph}.
+     */
+    @SuppressWarnings("unchecked")
+    public static Graph<String> onText(final TextView view) {
+        final Graph<String> graph = new Graph<>();
+        graph.setBeginNode(new TextViewNode(view));
+        return graph;
+    }
+
+    /**
+     * Attaches an {@link RequestNode} for the given {@link RequestDelegate}.
+     * @param delegate A {@link RequestDelegate}.
+     * @return This {@link Graph}.
+     */
+    @SuppressWarnings("unchecked")
+    public <OUT> Graph<OUT> request(final RequestDelegate<OUT> delegate) {
+        return (Graph<OUT>)next(new RequestNode<>(delegate));
     }
 }

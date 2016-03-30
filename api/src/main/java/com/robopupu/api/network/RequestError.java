@@ -13,38 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.robopupu.api.volley;
+package com.robopupu.api.network;
 
-import com.android.volley.VolleyError;
-import com.robopupu.api.network.HttpHeaders;
+import java.util.Map;
 
 /**
- * {@link RequestError} extends {@link Exception} that is used as a wrapper for
- * a {@link VolleyError},
+ * {@link RequestError} extends {@link Exception} to implement an object that can be used to store
+ * information about errors.
  */
 public class RequestError extends Exception {
 
-    protected final Throwable mCause;
-    private final HttpHeaders mHeaders;
-
+    protected Throwable mCause;
+    protected HttpHeaders mHeaders;
     protected String mMessage;
     protected long mNetworkTime;
     protected int mStatusCode;
 
-    public RequestError(final VolleyError error) {
+    public RequestError() {
+        /*
         mCause = error.getCause();
         mMessage = error.getMessage();
         mNetworkTime = error.getNetworkTimeMs();
-        mStatusCode = error.networkResponse.statusCode;
-        mHeaders = new HttpHeaders(error.networkResponse.headers);
+        mStatusCode = error.networkResponse.statusCode;*/
+
     }
 
     /**
      * Gets the actual {@link Throwable} causing the error.
      * @return A {@link Throwable}
      */
-    public final Throwable getException() {
+    public final Throwable getCause() {
         return mCause;
+    }
+
+    /**
+     * Sets the actual {@link Throwable} causing the error.
+     * @param cause A {@link Throwable}.
+     */
+    public void setCause(final Throwable cause) {
+        mCause = cause;
     }
 
     /**
@@ -56,6 +63,14 @@ public class RequestError extends Exception {
     }
 
     /**
+     * Sets the HTTP headers.
+     * @param headers A {@link Map} containing headers.
+     */
+    public void setHeaders(final Map<String, String> headers) {
+        mHeaders = new HttpHeaders(headers);
+    }
+
+    /**
      * Gets the error message.
      * @return The message as a {@link String}.
      */
@@ -64,11 +79,27 @@ public class RequestError extends Exception {
     }
 
     /**
+     * Sets the error message.
+     * @param message The message as a {@link String}.
+     */
+    public void setMessage(final String message) {
+        mMessage = message;
+    }
+
+    /**
      * Gets the network time of the error.
-     * @return
+     * @return The network time as a {@code long}.
      */
     public final long getNetworkTime() {
         return mNetworkTime;
+    }
+
+    /**
+     * Sets the network time of the error.
+     * @param networkTime The network time as a {@code long}.
+     */
+    public void setNetworkTime(final long networkTime) {
+        mNetworkTime = networkTime;
     }
 
     /**
@@ -79,4 +110,11 @@ public class RequestError extends Exception {
         return mStatusCode;
     }
 
+    /**
+     * Sets the HTTP status code of the error response.
+     * @param statusCode The HTTP status code as an {@code int}.
+     */
+    public void setStatusCode(final int statusCode) {
+        mStatusCode = statusCode;
+    }
 }
