@@ -5,14 +5,21 @@ import android.widget.TextView;
 
 import com.robopupu.api.graph.functions.BooleanFunction;
 import com.robopupu.api.graph.nodes.ActionNode;
+import com.robopupu.api.graph.nodes.BooleanNode;
 import com.robopupu.api.graph.nodes.BufferNode;
+import com.robopupu.api.graph.nodes.DoubleNode;
 import com.robopupu.api.graph.nodes.FilterNode;
+import com.robopupu.api.graph.nodes.FloatNode;
 import com.robopupu.api.graph.nodes.FunctionNode;
+import com.robopupu.api.graph.nodes.IntNode;
 import com.robopupu.api.graph.nodes.ListNode;
+import com.robopupu.api.graph.nodes.LongNode;
 import com.robopupu.api.graph.nodes.RepeatNode;
 import com.robopupu.api.graph.nodes.RequestNode;
 import com.robopupu.api.graph.nodes.SkipNode;
 import com.robopupu.api.graph.nodes.SkipWhileNode;
+import com.robopupu.api.graph.nodes.StringNode;
+import com.robopupu.api.graph.nodes.SumNode;
 import com.robopupu.api.graph.nodes.TakeNode;
 import com.robopupu.api.graph.nodes.TextViewNode;
 import com.robopupu.api.graph.nodes.ViewNode;
@@ -142,7 +149,7 @@ public class Graph<T> {
      * @return The begin {@link OutputNode}.
      */
     @SuppressWarnings("unchecked")
-    public <T_Node extends OutputNode<?>> T_Node getBeginNode() {
+    public <T_Node extends OutputNode<?>> T_Node getBegin() {
         return (T_Node)mBeginNode;
     }
 
@@ -236,7 +243,7 @@ public class Graph<T> {
     }
 
     /**
-     * Attaches the given {@link Node} to be the next {@link Node} after the specified {@link Node}.
+     * Attaches the given {@link Node} to the specified {@link OutputNode}.
      * The attached {@link Node} is tagged with the given tag {@link Object}.
      * @param findTag The tag {@link Object} specifying the current {@link Node}.
      * @param findTag The tag {@link Object} that is used to tag the attached {@link Node}.
@@ -249,7 +256,7 @@ public class Graph<T> {
     }
 
     /**
-     * Attaches a {@link FilterNode} with the given condition after the current {@link Node}.
+     * Attaches a {@link FilterNode} with the given condition to the current {@link OutputNode}.
      * @param condition The condition as a {@link BooleanFunction}.
      * @return This {@link Graph}.
      */
@@ -259,7 +266,7 @@ public class Graph<T> {
     }
 
     /**
-     * Attaches a {@link BufferNode} with the given capacity value after the current {@link Node}.
+     * Attaches a {@link BufferNode} with the given capacity value to the current {@link OutputNode}.
      * @param capacity The buffer capacity value.
      * @return This {@link Graph}.
      */
@@ -269,7 +276,7 @@ public class Graph<T> {
     }
 
     /**
-     * Attaches a {@link RepeatNode} with the given times parameter value after the current {@link Node}.
+     * Attaches a {@link RepeatNode} with the given times parameter value to the current {@link OutputNode}.
      * @param times The steps value.
      * @return This {@link Graph}.
      */
@@ -279,7 +286,7 @@ public class Graph<T> {
     }
 
     /**
-     * Attaches a {@link SkipNode} with the given steps parameter value after the current {@link Node}.
+     * Attaches a {@link SkipNode} with the given steps parameter value to the current {@link OutputNode}.
      * @param steps The steps value.
      * @return This {@link Graph}.
      */
@@ -289,7 +296,7 @@ public class Graph<T> {
     }
 
     /**
-     * Attaches a {@link SkipWhileNode} with the given condition after the current {@link Node}.
+     * Attaches a {@link SkipWhileNode} with the given condition to the current {@link OutputNode}.
      * @param condition The condition as a {@link BooleanFunction}.
      * @return This {@link Graph}.
      */
@@ -298,9 +305,16 @@ public class Graph<T> {
         return next(new SkipWhileNode<>(condition));
     }
 
+    /**
+     * Attaches a {@link StringNode} to the current {@link OutputNode}.
+     * @return This {@link Graph}.
+     */
+    public Graph<String> string() {
+        return next(new StringNode<>());
+    }
 
     /**
-     * Attaches a {@link TakeNode} with the given steps parameter value after the current {@link Node}.
+     * Attaches a {@link TakeNode} with the given steps parameter value to the current {@link OutputNode}.
      * @param steps The steps value.
      * @return This {@link Graph}.
      */
@@ -310,7 +324,7 @@ public class Graph<T> {
     }
 
     /**
-     * Attaches an {@link ActionNode} with the given action after the current {@link Node}.
+     * Attaches an {@link ActionNode} with the given action to the current {@link OutputNode}.
      * @param action The action as an {@link Action}.
      * @return This {@link Graph}.
      */
@@ -320,13 +334,21 @@ public class Graph<T> {
     }
 
     /**
-     * Attaches a {@link FunctionNode} with the given mapping function after the current {@link Node}.
+     * Attaches a {@link FunctionNode} with the given mapping function to the current {@link OutputNode}.
      * @param function The function as a {@link Function}.
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
     public <OUT> Graph<OUT> map(final Function<T, OUT> function) {
         return next(new FunctionNode<>(function));
+    }
+
+    /**
+     * Attaches a {@link SumNode} to the current {@link OutputNode}.
+     * @return This {@link Graph}.
+     */
+    public Graph<Double> sum() {
+        return next(new SumNode<>());
     }
 
     /**
@@ -371,5 +393,67 @@ public class Graph<T> {
     @SuppressWarnings("unchecked")
     public <OUT> Graph<OUT> request(final RequestDelegate<OUT> delegate) {
         return next(new RequestNode<>(delegate));
+    }
+
+    /**
+     * Invokes the begin node to emit its value(s).
+     */
+    public void emit() {
+        getBegin().emit();
+    }
+
+    /**
+     * Invokes emit on {@link Graph} and converts the emitted output to {@code boolean} value.
+     * @return A {@code boolean} value.
+     */
+    public boolean toBoolean() {
+        final BooleanNode<T> booleanNode = new BooleanNode<>();
+        next(booleanNode);
+        emit();
+        return booleanNode.getValue();
+    }
+
+    /**
+     * Invokes emit on {@link Graph} and converts the emitted output to {@code double} value.
+     * @return A {@code double} value.
+     */
+    public double toDouble() {
+        final DoubleNode<T> doubleNode = new DoubleNode<>();
+        next(doubleNode);
+        emit();
+        return doubleNode.getValue();
+    }
+
+    /**
+     * Invokes emit on {@link Graph} and converts the emitted output to {@code float} value.
+     * @return A {@code float} value.
+     */
+    public float toFloat() {
+        final FloatNode<T> floatNode = new FloatNode<>();
+        next(floatNode);
+        emit();
+        return floatNode.getValue();
+    }
+
+    /**
+     * Invokes emit on {@link Graph} and converts the emitted output to {@code int} value.
+     * @return An {@code int} value.
+     */
+    public int toInt() {
+        final IntNode<T> intNode = new IntNode<>();
+        next(intNode);
+        emit();
+        return intNode.getValue();
+    }
+
+    /**
+     * Invokes emit on {@link Graph} and converts the emitted output to {@code long} value.
+     * @return A {@code long} value.
+     */
+    public long toLong() {
+        final LongNode<T> longNode = new LongNode<>();
+        next(longNode);
+        emit();
+        return longNode.getValue();
     }
 }

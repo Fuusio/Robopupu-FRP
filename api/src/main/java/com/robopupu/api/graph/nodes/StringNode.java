@@ -9,6 +9,8 @@ import com.robopupu.api.graph.OutputNode;
  */
 public class StringNode<IN> extends AbstractNode<IN, String> {
 
+    private String mValue;
+
     @Override
     protected String processInput(final OutputNode<IN> outputNode, final IN input) {
         if (input != null) {
@@ -17,5 +19,9 @@ public class StringNode<IN> extends AbstractNode<IN, String> {
             error(this, new NullPointerException(createErrorMessage("Received a null object")));
             return null;
         }
+    }
+
+    public String getValue() {
+        return mValue;
     }
 }

@@ -83,7 +83,7 @@ public class NodeTest {
                 next(mEndNode);
 
         mEndNode.reset();
-        final Node<Integer, Integer> functionNode = graph.getBeginNode();
+        final Node<Integer, Integer> functionNode = graph.getBegin();
         functionNode.onInput(20);
         assertTrue(mEndNode.received(1000));
     }
@@ -100,7 +100,7 @@ public class NodeTest {
 
         graph.skip(3).next(node0).next(node1).next(node2).next(mEndNode);
 
-        final Node<Integer, Integer> beginNode = graph.getBeginNode();
+        final Node<Integer, Integer> beginNode = graph.getBegin();
 
         for (int i = 1; i < 7; i++) {
             beginNode.onInput(i);
@@ -115,21 +115,21 @@ public class NodeTest {
         Graph<Integer> graph = new Graph<>();
         graph.repeat(0).next(mEndNode);
         mEndNode.reset();
-        Node<Integer, Integer> beginNode = graph.getBeginNode();
+        Node<Integer, Integer> beginNode = graph.getBegin();
         beginNode.onInput(1);
         assertTrue(mEndNode.received());
 
         graph = new Graph<>();
         graph.repeat(1).next(mEndNode);
         mEndNode.reset();
-        beginNode = graph.getBeginNode();
+        beginNode = graph.getBegin();
         beginNode.onInput(1);
         assertTrue(mEndNode.received(1));
 
         graph = new Graph<>();
         graph.repeat(5).next(mEndNode);
         mEndNode.reset();
-        beginNode = graph.getBeginNode();
+        beginNode = graph.getBegin();
         beginNode.onInput(1);
         assertTrue(mEndNode.received(1, 1, 1, 1, 1));
     }
@@ -140,7 +140,7 @@ public class NodeTest {
         final Graph<Integer> graph = new Graph<>();
         graph.skipWhile(input -> input > 3).next(mEndNode);
         mEndNode.reset();
-        Node<Integer, Integer> beginNode = graph.getBeginNode();
+        Node<Integer, Integer> beginNode = graph.getBegin();
         beginNode.onInput(5);
         beginNode.onInput(6);
         beginNode.onInput(7);
@@ -164,7 +164,7 @@ public class NodeTest {
 
         graph.take(3).next(node0).next(node1).next(node2).next(mEndNode);
 
-        final Node<Integer, Integer> beginNode = graph.getBeginNode();
+        final Node<Integer, Integer> beginNode = graph.getBegin();
 
         for (int i = 1; i < 7; i++) {
             beginNode.onInput(i);
@@ -181,7 +181,7 @@ public class NodeTest {
 
         graph.filter(value -> value > 3).next(mEndNode);
 
-        final Node<Integer, Integer> beginNode = graph.getBeginNode();
+        final Node<Integer, Integer> beginNode = graph.getBegin();
 
         for (int i = 1; i < 7; i++) {
             beginNode.onInput(i);
@@ -197,30 +197,59 @@ public class NodeTest {
 
         graph.list(mIntegerList).take(3).next(mEndNode);
         mEndNode.reset();
-        graph.getBeginNode().emit();
+        graph.getBegin().emit();
         assertTrue(mEndNode.received(0, 1, 2));
 
         graph = new Graph<>();
         graph.list(mIntegerList).skip(7).next(mEndNode);
         mEndNode.reset();
-        graph.getBeginNode().emit();
+        graph.getBegin().emit();
         assertTrue(mEndNode.received(7, 8, 9));
     }
+
+    @Test
+    public void test_sum() {
+
+        final Graph<Item> graph = new Graph<>();
+        final List<Item> list = new ArrayList<>();
+        list.add(new Item(false, 1));
+        list.add(new Item(true, 2));
+        list.add(new Item(false, 3));
+        list.add(new Item(true, 4));
+        list.add(new Item(false, 5));
+        list.add(new Item(true, 6));
+
+        final int sum = graph.list(list).filter(item -> item.on).map(item -> item.value).sum().toInt();
+
+        assertTrue(sum == 12);
+
+    }
+
+    private class Item {
+
+        public final boolean on;
+        public final int value;
+
+        public Item(final boolean on, final int value) {
+            this.on = on;
+            this.value = value;
+        }
+    }
+
 
     @Test
     public void test_zip2() {
 
         final TerminalNode<String> endNode = new TerminalNode<>();
+        final Graph<Character> graph = new Graph<>();
+        final ListNode<Character> list = graph.listNode(createList('A', 'B', 'C'));
         final Zip2Node<Character, Integer, String> zipNode =
                 new Zip2Node<>((input1, input2) -> Character.toString(input1) + Integer.toString(input2));
-        final List<Character> characters = createList('A', 'B', 'C');
-        final Graph<Character> graph = new Graph<>();
-        final ListNode<Character> listNode = graph.listNode(characters);
 
-        graph.next(zipNode.input1).find(listNode).map(character -> character - 'A' + 1).
+        graph.next(zipNode.input1).find(list).map(c -> c - 'A' + 1).
                 next(zipNode.input2).end(endNode);
 
-        graph.getBeginNode().emit();
+        graph.emit();
 
         assertTrue(endNode.received("A1", "B2", "C3"));
     }
@@ -229,17 +258,16 @@ public class NodeTest {
     public void test_zip3() {
 
         final TerminalNode<String> endNode = new TerminalNode<>();
+        final Graph<Character> graph = new Graph<>();
+        final ListNode<Character> list = graph.listNode(createList('A', 'B', 'C'));
         final Zip3Node<Character, Integer, String, String> zipNode =
                 new Zip3Node<>((input1, input2, input3) -> Character.toString(input1) + Integer.toString(input2) + input3);
-        final List<Character> characters = createList('A', 'B', 'C');
-        final Graph<Character> graph = new Graph<>();
-        final ListNode<Character> listNode = graph.listNode(characters);
 
         graph.next(zipNode.input1).
-                find(listNode).map(character -> character - 'A' + 1).next(zipNode.input2).
-                find(listNode).map(character -> Character.toString(character)).next(zipNode.input3).end(endNode);
+                find(list).map(c -> c - 'A' + 1).next(zipNode.input2).
+                find(list).string().next(zipNode.input3).end(endNode);
 
-        graph.getBeginNode().emit();
+        graph.emit();
 
         assertTrue(endNode.received("A1A", "B2B", "C3C"));
     }
@@ -305,7 +333,7 @@ public class NodeTest {
         graph.find(status401).filter(response -> ERROR_D.contentEquals(response.error)).next(failed);
         graph.find(status401).filter(response -> ERROR_E.contentEquals(response.error)).next(failed);
 
-        return graph.getBeginNode();
+        return graph.getBegin();
     }
 
     @SuppressWarnings({"unchecked", "varargs"})
@@ -415,7 +443,7 @@ public class NodeTest {
         @Override
         public void onRequestAuthCode() {
         }
-        
+
         public boolean failed() {
             return mFailed;
         }
