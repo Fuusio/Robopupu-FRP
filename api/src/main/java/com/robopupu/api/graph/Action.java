@@ -3,8 +3,8 @@ package com.robopupu.api.graph;
 public interface Action<IN> {
 
     /**
-     * Executes an {@link Action} using the given {@link Object} as an input.
-     * @param input The input value {@link Object}.
+     * Executes an {@link Action} using the given input.
+     * @param input An input value of type {@code IN}.
      */
-    void execute(final IN input);
+    void execute(IN input);
 }

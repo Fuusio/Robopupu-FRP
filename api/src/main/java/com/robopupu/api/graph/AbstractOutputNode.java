@@ -17,6 +17,11 @@ public abstract class AbstractOutputNode<OUT> implements OutputNode<OUT> {
         mInputNodes = new ArrayList<>();
     }
 
+    @Override
+    public void emit() {
+        // By default do nothing
+    }
+
     /**
      * Invoked to emit the given output to attached {@link InputNode}s, if any.
      * @param output The outbut {@link Object}.
@@ -31,28 +36,28 @@ public abstract class AbstractOutputNode<OUT> implements OutputNode<OUT> {
 
     /**
      * Invoked to notify all {@link InputNode}s about completion.
+     * @param outputNode The completed {@link OutputNode}.
      */
-    protected void completed() {
+    protected void completed(final OutputNode<?> outputNode) {
         for (final InputNode<OUT> inputNode : mInputNodes) {
-            inputNode.onCompleted(this);
+            inputNode.onCompleted(outputNode);
         }
     }
 
     /**
      * Dispatches an error to all output {@link InputNode}s, if any.
+     * @param outputNode The {@link OutputNode} that has detected the error.
      * @param throwable A {@link Throwable} representing the error.
      */
-    protected void error(final Throwable throwable) {
+    protected void error(final OutputNode<?> outputNode, final Throwable throwable) {
         for (final InputNode<OUT> inputNode : mInputNodes) {
-            inputNode.onError(this, throwable);
+            inputNode.onError(outputNode, throwable);
         }
     }
 
     @Override
-    public void attach(final InputNode<OUT>... inputNodes) {
-        for (final InputNode<OUT> inputNode : inputNodes) {
-            addInputNode(inputNode);
-        }
+    public void attach(final InputNode<OUT> inputNode) {
+        addInputNode(inputNode);
     }
 
     /**
@@ -76,10 +81,8 @@ public abstract class AbstractOutputNode<OUT> implements OutputNode<OUT> {
     }
 
     @Override
-    public void detach(final InputNode<OUT>... inputNodes) {
-        for (final InputNode<OUT> inputNode : inputNodes) {
-            removeInputNode(inputNode);
-        }
+    public void detach(final InputNode<OUT> inputNode) {
+        removeInputNode(inputNode);
     }
 
     /**
@@ -97,6 +100,7 @@ public abstract class AbstractOutputNode<OUT> implements OutputNode<OUT> {
      * {@link AbstractOutputNode}.
      * @param inputNode The detached {@link InputNode}.
      */
+    @SuppressWarnings("unused")
     protected void onDetached(final InputNode<OUT> inputNode) {
         // By default do nothing
     }

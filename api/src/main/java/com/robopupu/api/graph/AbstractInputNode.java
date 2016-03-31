@@ -26,12 +26,12 @@ public abstract class AbstractInputNode<IN> implements InputNode<IN> {
     protected abstract void processInput(final OutputNode<IN> outputNode, final IN input);
 
     @Override
-    public void onCompleted(final OutputNode<IN> outputNode) {
+    public void onCompleted(final OutputNode<?> outputNode) {
         // By default do nothing
     }
 
     @Override
-    public void onError(final OutputNode<IN> outputNode, final Throwable throwable) {
+    public void onError(final OutputNode<?> outputNode, final Throwable throwable) {
         // By default do nothing
     }
 

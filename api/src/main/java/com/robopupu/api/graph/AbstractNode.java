@@ -36,19 +36,21 @@ public abstract class AbstractNode<IN, OUT> extends AbstractOutputNode<OUT>
             try {
                 return (OUT) input;
             } catch (ClassCastException e) {
-                error(e);
+                error(this, e);
             }
         }
         return null;
     }
 
     @Override
-    public void onCompleted(final OutputNode<IN> outputNode) {
-        // By default do nothing
+    public void onCompleted(final OutputNode<?> outputNode) {
+        for (final InputNode<OUT> inputNode : mInputNodes) {
+            inputNode.onCompleted(outputNode);
+        }
     }
 
     @Override
-    public void onError(final OutputNode<IN> outputNode, final Throwable throwable) {
-        error(throwable);
+    public void onError(final OutputNode<?> outputNode, final Throwable throwable) {
+        error(outputNode, throwable);
     }
 }

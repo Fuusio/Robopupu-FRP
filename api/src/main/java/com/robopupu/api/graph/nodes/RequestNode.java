@@ -31,6 +31,6 @@ public class RequestNode<IN, OUT> extends AbstractNode<IN, OUT> implements Reque
 
     @Override
     public void onError(final RequestError requestError) {
-        error(requestError);
+        error(this, requestError);
     }
 }

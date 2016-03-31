@@ -6,9 +6,9 @@ package com.robopupu.api.graph;
 public interface Function<IN, OUT> {
 
     /**
-     * Evaluates a {@link Function} using the given {@link Object} as an input.
-     * @param input The input value {@link Object}.
-     * @return Output value {@link Object}.
+     * Evaluates a {@link Function} using the given input.
+     * @param input An input value of type {@code IN}.
+     * @return The output value of type {@code OUT}.
      */
-    OUT eval(final IN input);
+    OUT eval(IN input);
 }

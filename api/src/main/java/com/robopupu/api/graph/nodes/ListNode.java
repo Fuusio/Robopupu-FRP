@@ -17,10 +17,11 @@ public class ListNode<OUT> extends AbstractOutputNode<OUT> {
     /**
      * Invoked to emit the contents of this {@link ListNode}.
      */
+    @Override
     public void emit() {
         for (final OUT output : mList) {
             out(output);
         }
-        completed();
+        completed(this);
     }
 }

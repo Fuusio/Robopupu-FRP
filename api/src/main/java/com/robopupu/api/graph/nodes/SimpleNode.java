@@ -18,7 +18,7 @@ public class SimpleNode<IN, OUT> extends AbstractNode<IN, OUT> {
             try {
                 return (OUT) input;
             } catch (ClassCastException e) {
-                error(e);
+                error(this, e);
             }
         }
         return null;

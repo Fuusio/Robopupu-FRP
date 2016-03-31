@@ -20,11 +20,15 @@ import android.test.suitebuilder.annotation.SmallTest;
 import com.robopupu.api.graph.nodes.ActionNode;
 import com.robopupu.api.graph.nodes.ListNode;
 import com.robopupu.api.graph.nodes.SimpleNode;
+import com.robopupu.api.graph.nodes.TakeNode;
+import com.robopupu.api.graph.nodes.Zip2Node;
+import com.robopupu.api.graph.nodes.Zip3Node;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +48,7 @@ public class NodeTest {
 
     @Before
     public void beforeTests() {
-        mEndNode = new TerminalNode();
+        mEndNode = new TerminalNode<Integer>();
         mIntegerList = new ArrayList<>();
 
         for (int i = 0; i < 10; i++) {
@@ -206,6 +210,50 @@ public class NodeTest {
         assertTrue(mEndNode.received(7, 8, 9));
     }
 
+    @Test
+    public void test_zip2() {
+
+        final TerminalNode<String> endNode = new TerminalNode<>();
+        final Zip2Node<Character, Integer, String> zipNode =
+                new Zip2Node<>((input1, input2) -> Character.toString(input1) + Integer.toString(input2));
+
+        final List<Character> characters = createList('A', 'B', 'C');
+
+        Graph<Character> graph = Graph.from("list", characters);
+        graph.next(zipNode.input1).<Character>find("list").eval(character -> character - 'A' + 1).next(zipNode.input2).end(endNode);
+
+        graph.getBeginNode().emit();
+
+        assertTrue(endNode.received("A1", "B2", "C3"));
+    }
+
+    @Test
+    public void test_zip3() {
+
+        final TerminalNode<String> endNode = new TerminalNode<>();
+        final Zip3Node<Character, Integer, String, String> zipNode =
+                new Zip3Node<>((input1, input2, input3) -> Character.toString(input1) + Integer.toString(input2) + input3);
+
+        final List<Character> characters = createList('A', 'B', 'C');
+
+        Graph<Character> graph = Graph.from("list", characters);
+        graph.next(zipNode.input1).
+                <Character>find("list").eval(character -> character - 'A' + 1).next(zipNode.input2).
+                <Character>find("list").eval(character -> Character.toString(character)).next(zipNode.input3).end(endNode);
+
+        graph.getBeginNode().emit();
+
+        assertTrue(endNode.received("A1A", "B2B", "C3C"));
+    }
+
+    private <T> List<T> createList(final T... values) {
+        final ArrayList<T> list = new ArrayList<>();
+        for (final T value : values) {
+            list.add(value);
+        }
+        return list;
+    }
+
 
     @Test
     public void test_logic() {
@@ -271,9 +319,9 @@ public class NodeTest {
         return graph.getBeginNode();
     }
 
-    private class TerminalNode extends AbstractNode<Integer, Integer> {
+    private class TerminalNode<T> extends AbstractNode<T, T> {
 
-        private final ArrayList<Integer> mReceivedInputs;
+        private final ArrayList<T> mReceivedInputs;
 
         private boolean mCompleted;
         private boolean mErrorReceived;
@@ -291,7 +339,7 @@ public class NodeTest {
             return mErrorReceived;
         }
 
-        public ArrayList<Integer> getReceivedInputs() {
+        public ArrayList<T> getReceivedInputs() {
             return mReceivedInputs;
         }
 
@@ -302,27 +350,27 @@ public class NodeTest {
         }
 
         @Override
-        public Integer processInput(final OutputNode<Integer> outputNode, final Integer input) {
+        public T processInput(final OutputNode<T> outputNode, final T input) {
             mReceivedInputs.add(input);
             return input;
         }
 
         @Override
-        public void onCompleted(final OutputNode<Integer> outputNode) {
+        public void onCompleted(final OutputNode<?> outputNode) {
             mCompleted = true;
         }
 
         @Override
-        public void onError(final OutputNode<Integer> outputNode, final Throwable throwable) {
+        public void onError(final OutputNode<?> outputNode, final Throwable throwable) {
             mErrorReceived = true;
         }
 
-        public boolean received(final int... inputs) {
+        public boolean received(final T... inputs) {
             final int receivedCount = mReceivedInputs.size();
 
             if (inputs.length == receivedCount) {
                 for (int i = 0; i < receivedCount; i++) {
-                    if (inputs[i] != mReceivedInputs.get(i)) {
+                    if (!inputs[i].equals(mReceivedInputs.get(i))) {
                         return false;
                     }
                 }

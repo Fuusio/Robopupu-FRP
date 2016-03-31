@@ -14,7 +14,7 @@ public class StringNode<IN> extends AbstractNode<IN, String> {
         if (input != null) {
             return input.toString();
         } else {
-            error(new NullPointerException(createErrorMessage("Received a null object")));
+            error(this, new NullPointerException(createErrorMessage("Received a null object")));
             return null;
         }
     }

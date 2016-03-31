@@ -3,14 +3,19 @@ package com.robopupu.api.graph;
 public interface OutputNode<OUT> {
 
     /**
-     * Attach the given {@link InputNode}s by adding them to the set of {@link InputNode}s.
-     * @param inputNodes A list of {@link InputNode}s.
+     * Invoked to emit available output value(s) from this {@link OutputNode}.
      */
-    void attach(final InputNode<OUT>... inputNodes);
+    void emit();
 
     /**
-     * Detaches the given {@link InputNode}s by removing them from the set of {@link InputNode}s.
-     * @param inputNodes A list of {@link InputNode}s.
+     * Attaches the given {@link InputNode} to this {@link OutputNode}.
+     * @param inputNode An{@link InputNode}.
      */
-    void detach(final InputNode<OUT>... inputNodes);
+    void attach(final InputNode<OUT> inputNode);
+
+    /**
+     * Detaches the given {@link InputNode} from this {@link OutputNode}.
+     * @param inputNode An {@link InputNode}.
+     */
+    void detach(final InputNode<OUT> inputNode);
 }
