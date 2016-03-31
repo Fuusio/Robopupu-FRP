@@ -20,7 +20,6 @@ import android.test.suitebuilder.annotation.SmallTest;
 import com.robopupu.api.graph.nodes.ActionNode;
 import com.robopupu.api.graph.nodes.ListNode;
 import com.robopupu.api.graph.nodes.SimpleNode;
-import com.robopupu.api.graph.nodes.TakeNode;
 import com.robopupu.api.graph.nodes.Zip2Node;
 import com.robopupu.api.graph.nodes.Zip3Node;
 
@@ -28,8 +27,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertTrue;
@@ -43,12 +42,11 @@ public class NodeTest {
     private static String ERROR_D = "D";
     private static String ERROR_E = "E";
 
-    private TerminalNode mEndNode;
+    private TerminalNode<Integer> mEndNode = new TerminalNode<>();
     private List<Integer> mIntegerList;
 
     @Before
     public void beforeTests() {
-        mEndNode = new TerminalNode<Integer>();
         mIntegerList = new ArrayList<>();
 
         for (int i = 0; i < 10; i++) {
@@ -61,7 +59,7 @@ public class NodeTest {
 
     @Test
     public void test_attach() {
-        Graph<Integer> graph = Graph.begin();
+        Graph<Integer> graph = new Graph<>();
 
         final Node<Integer, Integer> beginNode = new SimpleNode<>();
         final Node<Integer, Integer> node1 = new SimpleNode<>();
@@ -77,11 +75,11 @@ public class NodeTest {
 
         assertTrue(mEndNode.received(1, 2, 3));
 
-        graph = Graph.begin();
-        graph.eval(input -> Integer.toString(input)).
-                eval(input -> Integer.parseInt(input)).
-                eval(input -> input > 10).
-                eval(input -> input ? 1000 : 0).
+        graph = new Graph<>();
+        graph.map(input -> Integer.toString(input)).
+                map(Integer::parseInt).
+                map(input -> input > 10).
+                map(input -> input ? 1000 : 0).
                 next(mEndNode);
 
         mEndNode.reset();
@@ -92,7 +90,7 @@ public class NodeTest {
 
     @Test
     public void test_skip() {
-        final Graph<Integer> graph = Graph.begin();
+        final Graph<Integer> graph = new Graph<>();
 
         final Node<Integer, Integer> node0 = new SimpleNode<>();
         final Node<Integer, Integer> node1 = new SimpleNode<>();
@@ -114,21 +112,21 @@ public class NodeTest {
     @Test
     public void test_repeat() {
 
-        Graph<Integer> graph = Graph.begin();
+        Graph<Integer> graph = new Graph<>();
         graph.repeat(0).next(mEndNode);
         mEndNode.reset();
         Node<Integer, Integer> beginNode = graph.getBeginNode();
         beginNode.onInput(1);
         assertTrue(mEndNode.received());
 
-        graph = Graph.begin();
+        graph = new Graph<>();
         graph.repeat(1).next(mEndNode);
         mEndNode.reset();
         beginNode = graph.getBeginNode();
         beginNode.onInput(1);
         assertTrue(mEndNode.received(1));
 
-        graph = Graph.begin();
+        graph = new Graph<>();
         graph.repeat(5).next(mEndNode);
         mEndNode.reset();
         beginNode = graph.getBeginNode();
@@ -139,7 +137,7 @@ public class NodeTest {
     @Test
     public void test_skipWhile() {
 
-        final Graph<Integer> graph = Graph.begin();
+        final Graph<Integer> graph = new Graph<>();
         graph.skipWhile(input -> input > 3).next(mEndNode);
         mEndNode.reset();
         Node<Integer, Integer> beginNode = graph.getBeginNode();
@@ -156,7 +154,7 @@ public class NodeTest {
 
     @Test
     public void test_take() {
-        final Graph<Integer> graph = Graph.begin();
+        final Graph<Integer> graph = new Graph<>();
 
         final Node<Integer, Integer> node0 = new SimpleNode<>();
         final Node<Integer, Integer> node1 = new SimpleNode<>();
@@ -177,7 +175,7 @@ public class NodeTest {
 
     @Test
     public void test_filter() {
-        final Graph<Integer> graph = Graph.begin();
+        final Graph<Integer> graph = new Graph<>();
 
         mEndNode.reset();
 
@@ -195,18 +193,17 @@ public class NodeTest {
     @Test
     public void test_list() {
 
-        Graph<Integer> graph = Graph.from(mIntegerList);
-        graph.take(3).next(mEndNode);
+        Graph<Integer> graph = new Graph<>();
+
+        graph.list(mIntegerList).take(3).next(mEndNode);
         mEndNode.reset();
-        ListNode<Integer> listNode = graph.getBeginNode();
-        listNode.emit();
+        graph.getBeginNode().emit();
         assertTrue(mEndNode.received(0, 1, 2));
 
-        graph = Graph.from(mIntegerList);
-        graph.skip(7).next(mEndNode);
+        graph = new Graph<>();
+        graph.list(mIntegerList).skip(7).next(mEndNode);
         mEndNode.reset();
-        listNode = graph.getBeginNode();
-        listNode.emit();
+        graph.getBeginNode().emit();
         assertTrue(mEndNode.received(7, 8, 9));
     }
 
@@ -216,11 +213,12 @@ public class NodeTest {
         final TerminalNode<String> endNode = new TerminalNode<>();
         final Zip2Node<Character, Integer, String> zipNode =
                 new Zip2Node<>((input1, input2) -> Character.toString(input1) + Integer.toString(input2));
-
         final List<Character> characters = createList('A', 'B', 'C');
+        final Graph<Character> graph = new Graph<>();
+        final ListNode<Character> listNode = graph.listNode(characters);
 
-        Graph<Character> graph = Graph.from("list", characters);
-        graph.next(zipNode.input1).<Character>find("list").eval(character -> character - 'A' + 1).next(zipNode.input2).end(endNode);
+        graph.next(zipNode.input1).find(listNode).map(character -> character - 'A' + 1).
+                next(zipNode.input2).end(endNode);
 
         graph.getBeginNode().emit();
 
@@ -233,27 +231,18 @@ public class NodeTest {
         final TerminalNode<String> endNode = new TerminalNode<>();
         final Zip3Node<Character, Integer, String, String> zipNode =
                 new Zip3Node<>((input1, input2, input3) -> Character.toString(input1) + Integer.toString(input2) + input3);
-
         final List<Character> characters = createList('A', 'B', 'C');
+        final Graph<Character> graph = new Graph<>();
+        final ListNode<Character> listNode = graph.listNode(characters);
 
-        Graph<Character> graph = Graph.from("list", characters);
         graph.next(zipNode.input1).
-                <Character>find("list").eval(character -> character - 'A' + 1).next(zipNode.input2).
-                <Character>find("list").eval(character -> Character.toString(character)).next(zipNode.input3).end(endNode);
+                find(listNode).map(character -> character - 'A' + 1).next(zipNode.input2).
+                find(listNode).map(character -> Character.toString(character)).next(zipNode.input3).end(endNode);
 
         graph.getBeginNode().emit();
 
         assertTrue(endNode.received("A1A", "B2B", "C3C"));
     }
-
-    private <T> List<T> createList(final T... values) {
-        final ArrayList<T> list = new ArrayList<>();
-        for (final T value : values) {
-            list.add(value);
-        }
-        return list;
-    }
-
 
     @Test
     public void test_logic() {
@@ -297,27 +286,35 @@ public class NodeTest {
     }
 
     private Node<Response, Response> createGraph(final Authenticator authenticator) {
-        final Graph<Response> graph = Graph.begin();
+        final Graph<Response> graph = new Graph<>();
 
-        Node nAuthCode = graph.exec(response -> authenticator.onRequestAuthCode()).node();
+        OutputNode<Response> authCode = graph.exec(response -> authenticator.onRequestAuthCode()).node();
 
-        graph.<Response>find(nAuthCode).
+        graph.find(authCode).
                 filter(response -> response.statusCode == 200).
                 exec(authenticator::onAuthenticationSucceeded);
 
-        Node nStatus400 = graph.<Response>find(nAuthCode).filter(response -> response.statusCode == 400).node();
-        Node nStatus401 = graph.<Response>find(nAuthCode).filter(response -> response.statusCode == 401).node();
+        OutputNode<Response> status400 = graph.find(authCode).filter(response -> response.statusCode == 400).node();
+        OutputNode<Response> status401 = graph.find(authCode).filter(response -> response.statusCode == 401).node();
 
         Node<Response, Response> failed = new ActionNode<>(authenticator::onAuthenticationFailed);
 
-        graph.<Response>find(nStatus400).filter(response -> ERROR_A.contentEquals(response.error)).next(failed);
-        graph.<Response>find(nStatus400).filter(response -> ERROR_B.contentEquals(response.error)).next(failed);
-        graph.<Response>find(nStatus401).filter(response -> ERROR_C.contentEquals(response.error)).next(failed);
-        graph.<Response>find(nStatus401).filter(response -> ERROR_D.contentEquals(response.error)).next(failed);
-        graph.<Response>find(nStatus401).filter(response -> ERROR_E.contentEquals(response.error)).next(failed);
+        graph.find(status400).filter(response -> ERROR_A.contentEquals(response.error)).next(failed);
+        graph.find(status400).filter(response -> ERROR_B.contentEquals(response.error)).next(failed);
+        graph.find(status401).filter(response -> ERROR_C.contentEquals(response.error)).next(failed);
+        graph.find(status401).filter(response -> ERROR_D.contentEquals(response.error)).next(failed);
+        graph.find(status401).filter(response -> ERROR_E.contentEquals(response.error)).next(failed);
 
         return graph.getBeginNode();
     }
+
+    @SuppressWarnings({"unchecked", "varargs"})
+    private <T> List<T> createList(final T... values) {
+        final ArrayList<T> list = new ArrayList<>();
+        Collections.addAll(list, values);
+        return list;
+    }
+
 
     private class TerminalNode<T> extends AbstractNode<T, T> {
 
@@ -331,16 +328,14 @@ public class NodeTest {
             reset();
         }
 
+        @SuppressWarnings("unused")
         public boolean isCompleted() {
             return mCompleted;
         }
 
+        @SuppressWarnings("unused")
         public boolean isErrorReceived() {
             return mErrorReceived;
-        }
-
-        public ArrayList<T> getReceivedInputs() {
-            return mReceivedInputs;
         }
 
         public void reset() {
@@ -365,6 +360,7 @@ public class NodeTest {
             mErrorReceived = true;
         }
 
+        @SuppressWarnings({"unchecked", "varargs"})
         public boolean received(final T... inputs) {
             final int receivedCount = mReceivedInputs.size();
 
@@ -390,7 +386,6 @@ public class NodeTest {
         void onAuthenticationFailed(Response response);
         void onAuthenticationSucceeded(Response response);
         void onRequestAuthCode();
-        void onRequestAuthToken();
     }
 
     private class AuthenticatorImpl implements Authenticator {
@@ -420,11 +415,7 @@ public class NodeTest {
         @Override
         public void onRequestAuthCode() {
         }
-
-        @Override
-        public void onRequestAuthToken() {
-        }
-
+        
         public boolean failed() {
             return mFailed;
         }
