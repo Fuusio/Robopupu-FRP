@@ -50,8 +50,9 @@ public class Graph<T> {
      * @param inputNode An {@link InputNode}.
      */
     @SuppressWarnings("unchecked")
-    public <IN> void end(final InputNode<IN> inputNode) {
+    public <IN> Graph<IN> end(final InputNode<IN> inputNode) {
         ((OutputNode<IN>)mCurrentNode).attach(inputNode);
+        return (Graph<IN>)this;
     }
 
     /**
@@ -69,9 +70,10 @@ public class Graph<T> {
      * @return A {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public Graph<T> begin(final OutputNode<T> outputNode) {
-        setBeginNode(outputNode);
-        return this;
+    public static <OUT> Graph<OUT> begin(final OutputNode<OUT> outputNode) {
+        final Graph<OUT> graph = new Graph<>();
+        graph.setBeginNode(outputNode);
+        return graph;
     }
 
     /**
@@ -82,9 +84,10 @@ public class Graph<T> {
      * @return A {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public Graph<T> begin(final Object attachTag, final OutputNode<T> outputNode) {
-        setBeginNode(attachTag, outputNode);
-        return this;
+    public static <OUT> Graph<OUT> begin(final Object attachTag, final OutputNode<OUT> outputNode) {
+        final Graph<OUT> graph = new Graph<>();
+        graph.setBeginNode(attachTag, outputNode);
+        return graph;
     }
 
     /**
@@ -92,7 +95,7 @@ public class Graph<T> {
      * @param list A {@link List}
      * @return A {@link Graph}.
      */
-    public Graph<T> list(final List<T> list) {
+    public static <OUT> Graph<OUT> list(final List<OUT> list) {
         return begin(new ListNode<>(list));
     }
 
@@ -114,7 +117,7 @@ public class Graph<T> {
      * @param list A {@link List}
      * @return A {@link Graph}.
      */
-    public Graph<T> list(final Object attachTag, final List<T> list) {
+    public static <OUT> Graph<OUT> list(final Object attachTag, final List<OUT> list) {
         return begin(attachTag, new ListNode<>(list));
     }
 
@@ -329,7 +332,7 @@ public class Graph<T> {
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public Graph<T> exec(final Action<T> action) {
+    public Graph<T> action(final Action<T> action) {
         return next(new ActionNode<>(action));
     }
 

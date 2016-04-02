@@ -18,7 +18,6 @@ package com.robopupu.api.graph;
 import android.test.suitebuilder.annotation.SmallTest;
 
 import com.robopupu.api.graph.nodes.ActionNode;
-import com.robopupu.api.graph.nodes.ListNode;
 import com.robopupu.api.graph.nodes.SimpleNode;
 import com.robopupu.api.graph.nodes.Zip2Node;
 import com.robopupu.api.graph.nodes.Zip3Node;
@@ -43,14 +42,14 @@ public class NodeTest {
     private static String ERROR_E = "E";
 
     private TerminalNode<Integer> mEndNode = new TerminalNode<>();
-    private List<Integer> mIntegerList;
+    private List<Integer> mIntList;
 
     @Before
     public void beforeTests() {
-        mIntegerList = new ArrayList<>();
+        mIntList = new ArrayList<>();
 
         for (int i = 0; i < 10; i++) {
-            mIntegerList.add(i);
+            mIntList.add(i);
         }
     }
 
@@ -67,7 +66,7 @@ public class NodeTest {
 
         mEndNode.reset();
 
-        graph.next(beginNode).next(node1).next(node2).next(mEndNode);
+        graph.next(beginNode).next(node1).next(node2).end(mEndNode);
 
         for (int i = 1; i < 4; i++) {
             beginNode.onInput(i);
@@ -80,7 +79,7 @@ public class NodeTest {
                 map(Integer::parseInt).
                 map(input -> input > 10).
                 map(input -> input ? 1000 : 0).
-                next(mEndNode);
+                end(mEndNode);
 
         mEndNode.reset();
         final Node<Integer, Integer> functionNode = graph.getBegin();
@@ -98,7 +97,7 @@ public class NodeTest {
 
         mEndNode.reset();
 
-        graph.skip(3).next(node0).next(node1).next(node2).next(mEndNode);
+        graph.skip(3).next(node0).next(node1).next(node2).end(mEndNode);
 
         final Node<Integer, Integer> beginNode = graph.getBegin();
 
@@ -120,14 +119,14 @@ public class NodeTest {
         assertTrue(mEndNode.received());
 
         graph = new Graph<>();
-        graph.repeat(1).next(mEndNode);
+        graph.repeat(1).end(mEndNode);
         mEndNode.reset();
         beginNode = graph.getBegin();
         beginNode.onInput(1);
         assertTrue(mEndNode.received(1));
 
         graph = new Graph<>();
-        graph.repeat(5).next(mEndNode);
+        graph.repeat(5).end(mEndNode);
         mEndNode.reset();
         beginNode = graph.getBegin();
         beginNode.onInput(1);
@@ -138,7 +137,7 @@ public class NodeTest {
     public void test_skipWhile() {
 
         final Graph<Integer> graph = new Graph<>();
-        graph.skipWhile(input -> input > 3).next(mEndNode);
+        graph.skipWhile(input -> input > 3).end(mEndNode);
         mEndNode.reset();
         Node<Integer, Integer> beginNode = graph.getBegin();
         beginNode.onInput(5);
@@ -158,11 +157,10 @@ public class NodeTest {
 
         final Node<Integer, Integer> node0 = new SimpleNode<>();
         final Node<Integer, Integer> node1 = new SimpleNode<>();
-        final Node<Integer, Integer> node2 = new SimpleNode<>();
 
         mEndNode.reset();
 
-        graph.take(3).next(node0).next(node1).next(node2).next(mEndNode);
+        graph.take(3).next(node0).next(node1).end(mEndNode);
 
         final Node<Integer, Integer> beginNode = graph.getBegin();
 
@@ -179,7 +177,7 @@ public class NodeTest {
 
         mEndNode.reset();
 
-        graph.filter(value -> value > 3).next(mEndNode);
+        graph.filter(value -> value > 3).end(mEndNode);
 
         final Node<Integer, Integer> beginNode = graph.getBegin();
 
@@ -193,36 +191,24 @@ public class NodeTest {
     @Test
     public void test_list() {
 
-        Graph<Integer> graph = new Graph<>();
-
-        graph.list(mIntegerList).take(3).next(mEndNode);
         mEndNode.reset();
-        graph.getBegin().emit();
+        Graph.list(mIntList).take(3).end(mEndNode).emit();
         assertTrue(mEndNode.received(0, 1, 2));
 
-        graph = new Graph<>();
-        graph.list(mIntegerList).skip(7).next(mEndNode);
         mEndNode.reset();
-        graph.getBegin().emit();
+        Graph.list(mIntList).skip(7).end(mEndNode).emit();
         assertTrue(mEndNode.received(7, 8, 9));
     }
 
     @Test
     public void test_sum() {
 
-        final Graph<Item> graph = new Graph<>();
-        final List<Item> list = new ArrayList<>();
-        list.add(new Item(false, 1));
-        list.add(new Item(true, 2));
-        list.add(new Item(false, 3));
-        list.add(new Item(true, 4));
-        list.add(new Item(false, 5));
-        list.add(new Item(true, 6));
+        final List<Item> items =
+                createList(new Item(false, 1), new Item(true, 2), new Item(false, 3), new Item(true, 4), new Item(false, 5), new Item(true, 6));
 
-        final int sum = graph.list(list).filter(item -> item.on).map(item -> item.value).sum().toInt();
+        final int sum = Graph.list(items).filter(item -> item.on).map(item -> item.value).sum().toInt();
 
         assertTrue(sum == 12);
-
     }
 
     private class Item {
@@ -241,15 +227,11 @@ public class NodeTest {
     public void test_zip2() {
 
         final TerminalNode<String> endNode = new TerminalNode<>();
-        final Graph<Character> graph = new Graph<>();
-        final ListNode<Character> list = graph.listNode(createList('A', 'B', 'C'));
         final Zip2Node<Character, Integer, String> zipNode =
                 new Zip2Node<>((input1, input2) -> Character.toString(input1) + Integer.toString(input2));
 
-        graph.next(zipNode.input1).find(list).map(c -> c - 'A' + 1).
-                next(zipNode.input2).end(endNode);
-
-        graph.emit();
+        Graph.list("list", createList('A', 'B', 'C')).next(zipNode.input1).<Character>find("list").map(c -> c - 'A' + 1).
+                next(zipNode.input2).end(endNode).emit();
 
         assertTrue(endNode.received("A1", "B2", "C3"));
     }
@@ -258,16 +240,12 @@ public class NodeTest {
     public void test_zip3() {
 
         final TerminalNode<String> endNode = new TerminalNode<>();
-        final Graph<Character> graph = new Graph<>();
-        final ListNode<Character> list = graph.listNode(createList('A', 'B', 'C'));
         final Zip3Node<Character, Integer, String, String> zipNode =
                 new Zip3Node<>((input1, input2, input3) -> Character.toString(input1) + Integer.toString(input2) + input3);
 
-        graph.next(zipNode.input1).
-                find(list).map(c -> c - 'A' + 1).next(zipNode.input2).
-                find(list).string().next(zipNode.input3).end(endNode);
-
-        graph.emit();
+        Graph.list("list", createList('A', 'B', 'C')).next(zipNode.input1).
+                <Character>find("list").map(c -> c - 'A' + 1).next(zipNode.input2).
+                find("list").string().next(zipNode.input3).end(endNode).emit();
 
         assertTrue(endNode.received("A1A", "B2B", "C3C"));
     }
@@ -316,11 +294,11 @@ public class NodeTest {
     private Node<Response, Response> createGraph(final Authenticator authenticator) {
         final Graph<Response> graph = new Graph<>();
 
-        OutputNode<Response> authCode = graph.exec(response -> authenticator.onRequestAuthCode()).node();
+        OutputNode<Response> authCode = graph.action(response -> authenticator.onRequestAuthCode()).node();
 
         graph.find(authCode).
                 filter(response -> response.statusCode == 200).
-                exec(authenticator::onAuthenticationSucceeded);
+                action(authenticator::onAuthenticationSucceeded);
 
         OutputNode<Response> status400 = graph.find(authCode).filter(response -> response.statusCode == 400).node();
         OutputNode<Response> status401 = graph.find(authCode).filter(response -> response.statusCode == 401).node();

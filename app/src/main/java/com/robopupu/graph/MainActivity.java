@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
                 new RequestBuilder<JokeResponse>(this, "http://api.icndb.com/jokes/random").
                     request(new GsonRequest<>(JokeResponse.class));
 
-        Graph.onClick(fab).request(getJoke).exec(this::displayJoke);
+        Graph.onClick(fab).request(getJoke).action(this::displayJoke);
     }
 
     private void displayJoke(final JokeResponse response) {
