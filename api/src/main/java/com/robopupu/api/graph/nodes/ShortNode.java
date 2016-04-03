@@ -4,25 +4,25 @@ import com.robopupu.api.graph.AbstractNode;
 import com.robopupu.api.graph.OutputNode;
 
 /**
- * {@link ShortNode} converts the input value to a {@link Integer}.
+ * {@link ShortNode} converts the input value to a {@link Short}.
  * @param <IN> The input type.
  */
-public class ShortNode<IN> extends AbstractNode<IN, Integer> {
+public class ShortNode<IN> extends AbstractNode<IN, Short> {
 
-    private int mValue;
+    private short mValue;
 
     @Override
-    protected Integer processInput(final OutputNode<IN> outputNode, final IN input) {
+    protected Short processInput(final OutputNode<IN> outputNode, final IN input) {
         if (input instanceof Number) {
-            mValue = ((Number)input).intValue();
+            mValue = ((Number)input).shortValue();
             return mValue;
         } else {
-            error(this, new ClassCastException(createErrorMessage("Received an object that cannot be converted to int")));
+            error(this, new ClassCastException(createErrorMessage("Received an object that cannot be converted to short value")));
             return null;
         }
     }
 
-    public int getValue() {
+    public short getValue() {
         return mValue;
     }
 }

@@ -192,11 +192,11 @@ public class NodeTest {
     public void test_list() {
 
         mEndNode.reset();
-        Graph.list(mIntList).take(3).end(mEndNode).emit();
+        Graph.begin(mIntList).take(3).end(mEndNode).emit();
         assertTrue(mEndNode.received(0, 1, 2));
 
         mEndNode.reset();
-        Graph.list(mIntList).skip(7).end(mEndNode).emit();
+        Graph.begin(mIntList).skip(7).end(mEndNode).emit();
         assertTrue(mEndNode.received(7, 8, 9));
     }
 
@@ -206,7 +206,7 @@ public class NodeTest {
         final List<Item> items =
                 createList(new Item(false, 1), new Item(true, 2), new Item(false, 3), new Item(true, 4), new Item(false, 5), new Item(true, 6));
 
-        final int sum = Graph.list(items).filter(item -> item.on).map(item -> item.value).sum().toInt();
+        final int sum = Graph.begin(items).filter(item -> item.on).map(item -> item.value).sum().toInt();
 
         assertTrue(sum == 12);
     }
@@ -230,7 +230,7 @@ public class NodeTest {
         final Zip2Node<Character, Integer, String> zipNode =
                 new Zip2Node<>((input1, input2) -> Character.toString(input1) + Integer.toString(input2));
 
-        Graph.list("list", createList('A', 'B', 'C')).next(zipNode.input1).<Character>find("list").map(c -> c - 'A' + 1).
+        Graph.begin("list", createList('A', 'B', 'C')).next(zipNode.input1).<Character>find("list").map(c -> c - 'A' + 1).
                 next(zipNode.input2).end(endNode).emit();
 
         assertTrue(endNode.received("A1", "B2", "C3"));
@@ -243,7 +243,7 @@ public class NodeTest {
         final Zip3Node<Character, Integer, String, String> zipNode =
                 new Zip3Node<>((input1, input2, input3) -> Character.toString(input1) + Integer.toString(input2) + input3);
 
-        Graph.list("list", createList('A', 'B', 'C')).next(zipNode.input1).
+        Graph.begin("list", createList('A', 'B', 'C')).next(zipNode.input1).
                 <Character>find("list").map(c -> c - 'A' + 1).next(zipNode.input2).
                 find("list").string().next(zipNode.input3).end(endNode).emit();
 

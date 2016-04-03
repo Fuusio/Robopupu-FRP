@@ -4,25 +4,25 @@ import com.robopupu.api.graph.AbstractNode;
 import com.robopupu.api.graph.OutputNode;
 
 /**
- * {@link CharacterNode} converts the input value to a {@link Boolean}.
+ * {@link CharacterNode} converts the input value to a {@link Character}.
  * @param <IN> The input type.
  */
-public class CharacterNode<IN> extends AbstractNode<IN, Boolean> {
+public class CharacterNode<IN> extends AbstractNode<IN, Character> {
 
-    private boolean mValue;
+    private char mValue;
 
     @Override
-    protected Boolean processInput(final OutputNode<IN> outputNode, final IN input) {
-        if (input instanceof Boolean) {
-            mValue = (Boolean)input;
+    protected Character processInput(final OutputNode<IN> outputNode, final IN input) {
+        if (input instanceof Character) {
+            mValue = (Character)input;
             return mValue;
         } else {
-            error(this, new ClassCastException(createErrorMessage("Received an object that cannot be converted to Boolean")));
+            error(this, new ClassCastException(createErrorMessage("Received an object that cannot be converted to Character")));
             return null;
         }
     }
 
-    public boolean getValue() {
+    public char getValue() {
         return mValue;
     }
 }

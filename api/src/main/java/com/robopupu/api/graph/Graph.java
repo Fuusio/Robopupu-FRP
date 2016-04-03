@@ -7,6 +7,8 @@ import com.robopupu.api.graph.functions.BooleanFunction;
 import com.robopupu.api.graph.nodes.ActionNode;
 import com.robopupu.api.graph.nodes.BooleanNode;
 import com.robopupu.api.graph.nodes.BufferNode;
+import com.robopupu.api.graph.nodes.ByteNode;
+import com.robopupu.api.graph.nodes.CharacterNode;
 import com.robopupu.api.graph.nodes.DoubleNode;
 import com.robopupu.api.graph.nodes.FilterNode;
 import com.robopupu.api.graph.nodes.FloatNode;
@@ -16,6 +18,7 @@ import com.robopupu.api.graph.nodes.ListNode;
 import com.robopupu.api.graph.nodes.LongNode;
 import com.robopupu.api.graph.nodes.RepeatNode;
 import com.robopupu.api.graph.nodes.RequestNode;
+import com.robopupu.api.graph.nodes.ShortNode;
 import com.robopupu.api.graph.nodes.SkipNode;
 import com.robopupu.api.graph.nodes.SkipWhileNode;
 import com.robopupu.api.graph.nodes.StringNode;
@@ -45,23 +48,30 @@ public class Graph<T> {
         mTaggedNodes = new HashMap<>();
     }
 
+
     /**
-     * Adds the given {@link InputNode}s as end nodes.
-     * @param inputNode An {@link InputNode}.
+     * Begins this {@link Graph} with an {@link ActionNode} as a begin node. The given {@link Action}
+     * is used to create the {@link ActionNode}.
+     * @param action The action as an {@link Action}.
+     * @return A {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public <IN> Graph<IN> end(final InputNode<IN> inputNode) {
-        ((OutputNode<IN>)mCurrentNode).attach(inputNode);
-        return (Graph<IN>)this;
+    public static <OUT> Graph<OUT> begin(final Action<OUT> action) {
+        final Graph<OUT> graph = new Graph<>();
+        graph.setBeginNode(new ActionNode<>(action));
+        return graph;
     }
 
     /**
-     * Converts this {@link Graph}.
-     * @return This {@link Graph}.
+     * Begins this {@link Graph} with a {@link ActionNode} as a begin node. The begin
+     * node is tagged with the given tag {@link Object}. The given {@link Action}
+     * is used to create the {@link ActionNode}.
+     * @param attachTag An attach tag {@link Object}.
+     * @param action The action as an {@link Action}.
+     * @return A {@link Graph}.
      */
-    @SuppressWarnings("unchecked")
-    public <T_Graph extends Graph<?>> T_Graph to() {
-        return (T_Graph)this;
+    public static <OUT> Graph<OUT> begin(final Object attachTag, final Action<OUT> action) {
+        return begin(attachTag, action);
     }
 
     /**
@@ -95,19 +105,8 @@ public class Graph<T> {
      * @param list A {@link List}
      * @return A {@link Graph}.
      */
-    public static <OUT> Graph<OUT> list(final List<OUT> list) {
+    public static <OUT> Graph<OUT> begin(final List<OUT> list) {
         return begin(new ListNode<>(list));
-    }
-
-    /**
-     * Begins this {@link Graph} with a {@link ListNode} as a begin node.
-     * @param list A {@link List}
-     * @return A {@link ListNode}.
-     */
-    public ListNode<T> listNode(final List<T> list) {
-        final ListNode<T> listNode = new ListNode<>(list);
-        begin(listNode);
-        return listNode;
     }
 
     /**
@@ -117,7 +116,7 @@ public class Graph<T> {
      * @param list A {@link List}
      * @return A {@link Graph}.
      */
-    public static <OUT> Graph<OUT> list(final Object attachTag, final List<OUT> list) {
+    public static <OUT> Graph<OUT> begin(final Object attachTag, final List<OUT> list) {
         return begin(attachTag, new ListNode<>(list));
     }
 
@@ -405,15 +404,38 @@ public class Graph<T> {
         getBegin().emit();
     }
 
+
     /**
      * Invokes emit on {@link Graph} and converts the emitted output to {@code boolean} value.
      * @return A {@code boolean} value.
      */
     public boolean toBoolean() {
-        final BooleanNode<T> booleanNode = new BooleanNode<>();
-        next(booleanNode);
+        final BooleanNode<T> node = new BooleanNode<>();
+        next(node);
         emit();
-        return booleanNode.getValue();
+        return node.getValue();
+    }
+
+    /**
+     * Invokes emit on {@link Graph} and converts the emitted output to {@code byte} value.
+     * @return A {@code byte} value.
+     */
+    public byte toByte() {
+        final ByteNode<T> node = new ByteNode<>();
+        next(node);
+        emit();
+        return node.getValue();
+    }
+
+    /**
+     * Invokes emit on {@link Graph} and converts the emitted output to {@code char} value.
+     * @return A {@code char} value.
+     */
+    public char toChar() {
+        final CharacterNode<T> node = new CharacterNode<>();
+        next(node);
+        emit();
+        return node.getValue();
     }
 
     /**
@@ -421,10 +443,10 @@ public class Graph<T> {
      * @return A {@code double} value.
      */
     public double toDouble() {
-        final DoubleNode<T> doubleNode = new DoubleNode<>();
-        next(doubleNode);
+        final DoubleNode<T> node = new DoubleNode<>();
+        next(node);
         emit();
-        return doubleNode.getValue();
+        return node.getValue();
     }
 
     /**
@@ -432,10 +454,10 @@ public class Graph<T> {
      * @return A {@code float} value.
      */
     public float toFloat() {
-        final FloatNode<T> floatNode = new FloatNode<>();
-        next(floatNode);
+        final FloatNode<T> node = new FloatNode<>();
+        next(node);
         emit();
-        return floatNode.getValue();
+        return node.getValue();
     }
 
     /**
@@ -443,10 +465,10 @@ public class Graph<T> {
      * @return An {@code int} value.
      */
     public int toInt() {
-        final IntNode<T> intNode = new IntNode<>();
-        next(intNode);
+        final IntNode<T> node = new IntNode<>();
+        next(node);
         emit();
-        return intNode.getValue();
+        return node.getValue();
     }
 
     /**
@@ -454,9 +476,40 @@ public class Graph<T> {
      * @return A {@code long} value.
      */
     public long toLong() {
-        final LongNode<T> longNode = new LongNode<>();
-        next(longNode);
+        final LongNode<T> node = new LongNode<>();
+        next(node);
         emit();
-        return longNode.getValue();
+        return node.getValue();
     }
+
+    /**
+     * Invokes emit on {@link Graph} and converts the emitted output to {@code short} value.
+     * @return A {@code short} value.
+     */
+    public short toShort() {
+        final ShortNode<T> node = new ShortNode<>();
+        next(node);
+        emit();
+        return node.getValue();
+    }
+
+    /**
+     * Adds the given {@link InputNode}s as end nodes.
+     * @param inputNode An {@link InputNode}.
+     */
+    @SuppressWarnings("unchecked")
+    public <IN> Graph<IN> end(final InputNode<IN> inputNode) {
+        ((OutputNode<IN>)mCurrentNode).attach(inputNode);
+        return (Graph<IN>)this;
+    }
+
+    /**
+     * Converts this {@link Graph}.
+     * @return This {@link Graph}.
+     */
+    @SuppressWarnings("unchecked")
+    public <T_Graph extends Graph<?>> T_Graph to() {
+        return (T_Graph)this;
+    }
+
 }
