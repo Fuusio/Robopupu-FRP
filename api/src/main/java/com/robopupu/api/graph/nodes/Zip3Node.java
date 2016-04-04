@@ -1,8 +1,6 @@
 package com.robopupu.api.graph.nodes;
 
-import com.robopupu.api.graph.Function3;
-import com.robopupu.api.graph.ZipInputNode;
-import com.robopupu.api.graph.ZipNode;
+import com.robopupu.api.graph.functions.Function3;
 
 /**
  * {@link Zip3Node} extends {@link ZipNode} for combining three inputs to one emitted output value.

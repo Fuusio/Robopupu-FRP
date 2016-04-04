@@ -1,4 +1,6 @@
-package com.robopupu.api.graph;
+package com.robopupu.api.graph.functions;
+
+import com.robopupu.api.graph.Function;
 
 /**
  * Defines an function interface declaring functions objects and lambdas.

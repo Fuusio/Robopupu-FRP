@@ -1,4 +1,9 @@
-package com.robopupu.api.graph;
+package com.robopupu.api.graph.nodes;
+
+import com.robopupu.api.graph.AbstractNode;
+import com.robopupu.api.graph.InputNode;
+import com.robopupu.api.graph.Node;
+import com.robopupu.api.graph.OutputNode;
 
 import java.util.ArrayList;
 

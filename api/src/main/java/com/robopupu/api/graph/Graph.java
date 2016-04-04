@@ -26,6 +26,7 @@ import com.robopupu.api.graph.nodes.SumNode;
 import com.robopupu.api.graph.nodes.TakeNode;
 import com.robopupu.api.graph.nodes.TextViewNode;
 import com.robopupu.api.graph.nodes.ViewNode;
+import com.robopupu.api.graph.nodes.ZipInputNode;
 import com.robopupu.api.network.RequestDelegate;
 
 import java.util.HashMap;
@@ -38,16 +39,69 @@ import java.util.List;
  */
 public class Graph<T> {
 
-    protected final HashMap<Object, OutputNode<?>> mTaggedNodes;
+    protected final HashMap<Tag, OutputNode<?>> mTaggedNodes;
 
     private OutputNode<T> mBeginNode;
+    private Tag<T> mBeginTag;
     private OutputNode<?> mCurrentNode;
-    private Object mPendingAttachTag;
+    private Tag mPendingAttachTag;
 
     protected Graph() {
+        mBeginTag = new Tag<>();
         mTaggedNodes = new HashMap<>();
     }
 
+    /**
+     * Gest the begin {@link Tag}.
+     * @return A {@link Tag}.
+     */
+    public Tag<T> getBeginTag() {
+        return mBeginTag;
+    }
+
+    /**
+     * Gets the begin {@link OutputNode} for this {@link Graph}.
+     * @return The begin {@link OutputNode}.
+     */
+    @SuppressWarnings("unchecked")
+    public <T_Node extends OutputNode<?>> T_Node getBeginNode() {
+        return (T_Node)mBeginNode;
+    }
+
+    /**
+     * Sets the begin {@link OutputNode}.
+     * @param outputNode A {@link OutputNode}.
+     */
+    protected void setBeginNode(final OutputNode<T> outputNode) {
+        if (mPendingAttachTag != null) {
+            mTaggedNodes.put(mPendingAttachTag, outputNode);
+            mPendingAttachTag = null;
+        } else {
+            mTaggedNodes.put(mBeginTag, outputNode);
+        }
+        mBeginNode = outputNode;
+        mCurrentNode = outputNode;
+    }
+
+    /**
+     * Sets the begin {@link OutputNode} with the given tag.
+     * @param tag An attach {@link Tag}.
+     * @param outputNode A {@link OutputNode}.
+     */
+    protected void setBeginNode(final Tag tag, final OutputNode<T> outputNode) {
+        mTaggedNodes.put(tag, outputNode);
+        mBeginNode = outputNode;
+        mCurrentNode = outputNode;
+    }
+
+    /**
+     * Gets the current {@link Node}.
+     * @return A {@link Node}.
+     */
+    @SuppressWarnings("unchecked")
+    public <T_Node> T_Node getCurrentNode() {
+        return (T_Node)mCurrentNode;
+    }
 
     /**
      * Begins this {@link Graph} with an {@link ActionNode} as a begin node. The given {@link Action}
@@ -64,14 +118,16 @@ public class Graph<T> {
 
     /**
      * Begins this {@link Graph} with a {@link ActionNode} as a begin node. The begin
-     * node is tagged with the given tag {@link Object}. The given {@link Action}
+     * node is tagged with the given {@link Tag}. The given {@link Action}
      * is used to create the {@link ActionNode}.
-     * @param attachTag An attach tag {@link Object}.
+     * @param tag A {@link Tag}.
      * @param action The action as an {@link Action}.
      * @return A {@link Graph}.
      */
-    public static <OUT> Graph<OUT> begin(final Object attachTag, final Action<OUT> action) {
-        return begin(attachTag, action);
+    public static <OUT> Graph<OUT> begin(final Tag tag, final Action<OUT> action) {
+        final Graph<OUT> graph = new Graph<>();
+        graph.setBeginNode(tag, new ActionNode<>(action));
+        return graph;
     }
 
     /**
@@ -88,15 +144,15 @@ public class Graph<T> {
 
     /**
      * Begins this {@link Graph} with the given {@link OutputNode} as a begin node. The begin
-     * node is tagged with the given tag {@link Object}.
-     * @param attachTag An attach tag {@link Object}.
+     * node is tagged with the given {@link Tag}.
+     * @param tag An attach tag {@link Tag}.
      * @param outputNode A {@link OutputNode}
      * @return A {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public static <OUT> Graph<OUT> begin(final Object attachTag, final OutputNode<OUT> outputNode) {
+    public static <OUT> Graph<OUT> begin(final Tag tag, final OutputNode<OUT> outputNode) {
         final Graph<OUT> graph = new Graph<>();
-        graph.setBeginNode(attachTag, outputNode);
+        graph.setBeginNode(tag, outputNode);
         return graph;
     }
 
@@ -111,93 +167,46 @@ public class Graph<T> {
 
     /**
      * Begins this {@link Graph} with a {@link ListNode} as a begin node. The begin
-     * node is tagged with the given tag {@link Object}.
-     * @param attachTag An attach tag {@link Object}.
+     * node is tagged with the given {@link Tag}.
+     * @param tag A {@link Tag}.
      * @param list A {@link List}
      * @return A {@link Graph}.
      */
-    public static <OUT> Graph<OUT> begin(final Object attachTag, final List<OUT> list) {
-        return begin(attachTag, new ListNode<>(list));
+    public static <OUT> Graph<OUT> begin(final Tag tag, final List<OUT> list) {
+        return begin(tag, new ListNode<>(list));
     }
 
     /**
-     * Sets the begin {@link OutputNode}.
-     * @param outputNode A {@link OutputNode}.
-     */
-    protected void setBeginNode(final OutputNode<T> outputNode) {
-        if (mPendingAttachTag != null) {
-            mTaggedNodes.put(mPendingAttachTag, outputNode);
-            mPendingAttachTag = null;
-        } else {
-            mTaggedNodes.put(outputNode, outputNode);
-        }
-        mBeginNode = outputNode;
-        mCurrentNode = outputNode;
-    }
-
-    /**
-     * Sets the begin {@link OutputNode}.
-     * @param attachTag An attach tag {@link Object}.
-     * @param outputNode A {@link OutputNode}.
-     */
-    protected void setBeginNode(final Object attachTag, final OutputNode<T> outputNode) {
-        mTaggedNodes.put(attachTag, outputNode);
-        mBeginNode = outputNode;
-        mCurrentNode = outputNode;
-    }
-
-    /**
-     * Gets the begin {@link OutputNode} for this {@link Graph}.
-     * @return The begin {@link OutputNode}.
-     */
-    @SuppressWarnings("unchecked")
-    public <T_Node extends OutputNode<?>> T_Node getBegin() {
-        return (T_Node)mBeginNode;
-    }
-
-    /**
-     * Finds a {@link Node} tagged with the given tag {@link Object} and sets it to be current tag.
-     * @param findTag The tag {@link Object}.
+     * Finds a {@link OutputNode} tagged with the given {@link Tag} and sets it to be current node.
+     * @param tag A {@link Tag}.
      * @param <OUT> The output type of the current {@link Node}.
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public <OUT> Graph<OUT> find(final Object findTag) {
-        mCurrentNode = mTaggedNodes.get(findTag);
+    public <OUT> Graph<OUT> node(final Tag<OUT> tag) {
+        mCurrentNode = mTaggedNodes.get(tag);
         return (Graph<OUT>)this;
     }
 
     /**
-     * Finds the given {@link OutputNode} sets it to be current tag.
-     * @param node A {@link Node}
-     * @param <OUT> The output type of the current {@link OutputNode}.
-     * @return This {@link Graph}.
-     */
-    @SuppressWarnings("unchecked")
-    public <OUT> Graph<OUT> find(final OutputNode<OUT> node) {
-        mCurrentNode = mTaggedNodes.get(node);
-        return (Graph<OUT>)this;
-    }
-
-    /**
-     * Finds a {@link OutputNode} tagged with the given tag {@link Object}.
-     * @param findTag The tag {@link Object}.
+     * Finds a {@link OutputNode} tagged with the given {@link Tag}.
+     * @param tag A {@link Tag}.
      * @param <OUT> The output type of the {@link OutputNode}.
      * @return The found {@link OutputNode}. May return {@code null}.
      */
     @SuppressWarnings("unchecked")
-    public <OUT> OutputNode<OUT> findNode(final Object findTag) {
-        return (OutputNode<OUT>)mTaggedNodes.get(findTag);
+    public <OUT> OutputNode<OUT> findNode(final Tag tag) {
+        return (OutputNode<OUT>)mTaggedNodes.get(tag);
     }
 
     /**
-     * Tags the next {@link Node} with the given tag {@link Object}.
-     * @param attachTag The tag {@link Object}.
+     * Tags the next {@link Node} with the given {@link Tag}.
+     * @param tag The tag {@link Object}.
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public Graph<T> tag(final Object attachTag) {
-        mPendingAttachTag = attachTag;
+    public Graph<T> tag(final Tag tag) {
+        mPendingAttachTag = tag;
         return this;
     }
 
@@ -217,8 +226,6 @@ public class Graph<T> {
         if (mPendingAttachTag != null) {
             mTaggedNodes.put(mPendingAttachTag, nextNode);
             mPendingAttachTag = null;
-        } else {
-            mTaggedNodes.put(nextNode, nextNode);
         }
 
         if (mCurrentNode != null) {
@@ -238,11 +245,11 @@ public class Graph<T> {
      * @param findTag The tag {@link Object}.
      * @param node A {@link Node}.
      * @return This {@link Graph}.
-     */
-    public <OUT> Graph<OUT> next(final Object findTag, final Node<T, OUT> node) {
+     * REMOVE
+    public <OUT> Graph<OUT> from(final Object findTag, final Node<T, OUT> node) {
         final Graph<T> graph = find(findTag);
         return graph.next(node);
-    }
+    }*/
 
     /**
      * Attaches the given {@link Node} to the specified {@link OutputNode}.
@@ -251,11 +258,11 @@ public class Graph<T> {
      * @param findTag The tag {@link Object} that is used to tag the attached {@link Node}.
      * @param node A {@link Node}.
      * @return This {@link Graph}.
-     */
+     * REMOVE
     public <OUT> Graph<OUT> next(final Object findTag, final Object attachTag, final Node<T, OUT> node) {
-        final Graph<T> graph = find(findTag);
+        final Graph<T> graph = to(findTag);
         return graph.tag(attachTag).next(node);
-    }
+    }*/
 
     /**
      * Attaches a {@link FilterNode} with the given condition to the current {@link OutputNode}.
@@ -264,6 +271,19 @@ public class Graph<T> {
      */
     @SuppressWarnings("unchecked")
     public Graph<T> filter(final BooleanFunction<T> condition) {
+        return next(new FilterNode<>(condition));
+    }
+
+    /**
+     * Attaches a {@link FilterNode} with the given condition to the current {@link OutputNode}.
+     * The {@link FilterNode} is attached using the given tag.
+     * @param tag A {@link Tag}.
+     * @param condition The condition as a {@link BooleanFunction}.
+     * @return This {@link Graph}.
+     */
+    @SuppressWarnings("unchecked")
+    public Graph<T> filter(final Tag<T> tag, final BooleanFunction<T> condition) {
+        tag(tag);
         return next(new FilterNode<>(condition));
     }
 
@@ -354,15 +374,6 @@ public class Graph<T> {
     }
 
     /**
-     * Gets the current {@link Node}.
-     * @return A {@link Node}.
-     */
-    @SuppressWarnings("unchecked")
-    public <T_Node> T_Node node() {
-        return (T_Node)mCurrentNode;
-    }
-
-    /**
      * Attaches an {@link ViewNode} for the given {@link View} to produce click outputs.
      * @param view A {@link View}.
      * @return This {@link Graph}.
@@ -401,7 +412,7 @@ public class Graph<T> {
      * Invokes the begin node to emit its value(s).
      */
     public void emit() {
-        getBegin().emit();
+        getBeginNode().emit();
     }
 
 
@@ -494,7 +505,7 @@ public class Graph<T> {
     }
 
     /**
-     * Adds the given {@link InputNode}s as end nodes.
+     * Adds the given {@link InputNode} as an end node.
      * @param inputNode An {@link InputNode}.
      */
     @SuppressWarnings("unchecked")
@@ -504,11 +515,21 @@ public class Graph<T> {
     }
 
     /**
+     * Adds the specified {@link ActionNode} as and end nodes.
+     * @param action An {@link Action} specifying the added {@link ActionNode}.
+     */
+    @SuppressWarnings("unchecked")
+    public <IN> Graph<IN> end(final Action<IN> action) {
+        ((OutputNode<IN>)mCurrentNode).attach(new ActionNode<>(action));
+        return (Graph<IN>)this;
+    }
+
+    /**
      * Converts this {@link Graph}.
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
-    public <T_Graph extends Graph<?>> T_Graph to() {
+    public <T_Graph extends Graph<?>> T_Graph cast() {
         return (T_Graph)this;
     }
 

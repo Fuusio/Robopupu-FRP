@@ -1,4 +1,8 @@
-package com.robopupu.api.graph;
+package com.robopupu.api.graph.nodes;
+
+import com.robopupu.api.graph.AbstractNode;
+import com.robopupu.api.graph.Node;
+import com.robopupu.api.graph.OutputNode;
 
 /**
  * {@link ZipInputNode} extends {@link AbstractNode} to define an interface for {@link Node}s that are

@@ -1,6 +1,8 @@
-package com.robopupu.api.graph;
+package com.robopupu.api.graph.actions;
 
-public interface Action4<IN1, IN2, IN3, IN4> {
+import com.robopupu.api.graph.Action;
+
+public interface Action5<IN1, IN2, IN3, IN4, IN5> {
 
     /**
      * Executes an {@link Action} using the given inputs.
@@ -8,6 +10,7 @@ public interface Action4<IN1, IN2, IN3, IN4> {
      * @param input2 An input value of type {@code IN2}.
      * @param input3 An input value of type {@code IN3}.
      * @param input4 An input value of type {@code IN4}.
+     * @param input5 An input value of type {@code IN5}.
      */
-    void execute(IN1 input1, IN2 input2, IN3 input3, IN4 input4);
+    void execute(IN1 input1, IN2 input2, IN3 input3, IN4 input4, IN5 input5);
 }

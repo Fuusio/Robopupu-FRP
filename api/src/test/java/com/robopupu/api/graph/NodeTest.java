@@ -21,6 +21,7 @@ import com.robopupu.api.graph.nodes.ActionNode;
 import com.robopupu.api.graph.nodes.SimpleNode;
 import com.robopupu.api.graph.nodes.Zip2Node;
 import com.robopupu.api.graph.nodes.Zip3Node;
+import com.robopupu.api.graph.nodes.Zip9Node;
 
 import org.junit.After;
 import org.junit.Before;
@@ -82,7 +83,7 @@ public class NodeTest {
                 end(mEndNode);
 
         mEndNode.reset();
-        final Node<Integer, Integer> functionNode = graph.getBegin();
+        final Node<Integer, Integer> functionNode = graph.getBeginNode();
         functionNode.onInput(20);
         assertTrue(mEndNode.received(1000));
     }
@@ -99,7 +100,7 @@ public class NodeTest {
 
         graph.skip(3).next(node0).next(node1).next(node2).end(mEndNode);
 
-        final Node<Integer, Integer> beginNode = graph.getBegin();
+        final Node<Integer, Integer> beginNode = graph.getBeginNode();
 
         for (int i = 1; i < 7; i++) {
             beginNode.onInput(i);
@@ -114,21 +115,21 @@ public class NodeTest {
         Graph<Integer> graph = new Graph<>();
         graph.repeat(0).next(mEndNode);
         mEndNode.reset();
-        Node<Integer, Integer> beginNode = graph.getBegin();
+        Node<Integer, Integer> beginNode = graph.getBeginNode();
         beginNode.onInput(1);
         assertTrue(mEndNode.received());
 
         graph = new Graph<>();
         graph.repeat(1).end(mEndNode);
         mEndNode.reset();
-        beginNode = graph.getBegin();
+        beginNode = graph.getBeginNode();
         beginNode.onInput(1);
         assertTrue(mEndNode.received(1));
 
         graph = new Graph<>();
         graph.repeat(5).end(mEndNode);
         mEndNode.reset();
-        beginNode = graph.getBegin();
+        beginNode = graph.getBeginNode();
         beginNode.onInput(1);
         assertTrue(mEndNode.received(1, 1, 1, 1, 1));
     }
@@ -139,7 +140,7 @@ public class NodeTest {
         final Graph<Integer> graph = new Graph<>();
         graph.skipWhile(input -> input > 3).end(mEndNode);
         mEndNode.reset();
-        Node<Integer, Integer> beginNode = graph.getBegin();
+        Node<Integer, Integer> beginNode = graph.getBeginNode();
         beginNode.onInput(5);
         beginNode.onInput(6);
         beginNode.onInput(7);
@@ -162,7 +163,7 @@ public class NodeTest {
 
         graph.take(3).next(node0).next(node1).end(mEndNode);
 
-        final Node<Integer, Integer> beginNode = graph.getBegin();
+        final Node<Integer, Integer> beginNode = graph.getBeginNode();
 
         for (int i = 1; i < 7; i++) {
             beginNode.onInput(i);
@@ -179,7 +180,7 @@ public class NodeTest {
 
         graph.filter(value -> value > 3).end(mEndNode);
 
-        final Node<Integer, Integer> beginNode = graph.getBegin();
+        final Node<Integer, Integer> beginNode = graph.getBeginNode();
 
         for (int i = 1; i < 7; i++) {
             beginNode.onInput(i);
@@ -229,9 +230,12 @@ public class NodeTest {
         final TerminalNode<String> endNode = new TerminalNode<>();
         final Zip2Node<Character, Integer, String> zipNode =
                 new Zip2Node<>((input1, input2) -> Character.toString(input1) + Integer.toString(input2));
+        final Tag<Character> begin = new Tag<>();
 
-        Graph.begin("list", createList('A', 'B', 'C')).next(zipNode.input1).<Character>find("list").map(c -> c - 'A' + 1).
-                next(zipNode.input2).end(endNode).emit();
+        Graph.begin(begin, createList('A', 'B', 'C')).
+                node(begin).next(zipNode.input1).
+                node(begin).map(c -> c - 'A' + 1).next(zipNode.input2).
+                end(endNode).emit();
 
         assertTrue(endNode.received("A1", "B2", "C3"));
     }
@@ -242,12 +246,38 @@ public class NodeTest {
         final TerminalNode<String> endNode = new TerminalNode<>();
         final Zip3Node<Character, Integer, String, String> zipNode =
                 new Zip3Node<>((input1, input2, input3) -> Character.toString(input1) + Integer.toString(input2) + input3);
+        final Tag<Character> begin = new Tag<>();
 
-        Graph.begin("list", createList('A', 'B', 'C')).next(zipNode.input1).
-                <Character>find("list").map(c -> c - 'A' + 1).next(zipNode.input2).
-                find("list").string().next(zipNode.input3).end(endNode).emit();
+        Graph.begin(begin, createList('A', 'B', 'C')).
+                next(zipNode.input1).
+                node(begin).map(c -> c - 'A' + 1).next(zipNode.input2).
+                node(begin).string().next(zipNode.input3).end(endNode).emit();
 
         assertTrue(endNode.received("A1A", "B2B", "C3C"));
+    }
+
+    @Test
+    public void test_zip9() {
+
+        final TerminalNode<String> endNode = new TerminalNode<>();
+        final Zip9Node<Character, Integer, String, Character, Integer, String, Character, Integer, String, String> zipNode =
+                new Zip9Node<>((input1, input2, input3, input4, input5, input6, input7, input8, input9) ->
+                        Character.toString(input1) + Integer.toString(input2) + input3 + Character.toString(input4) + Integer.toString(input5) + input6 + Character.toString(input7) + Integer.toString(input8) + input9);
+        final Tag<Character> begin = new Tag<>();
+
+        Graph.begin(begin, createList('A', 'B', 'C')).
+                node(begin).next(zipNode.input1).
+                node(begin).map(c -> c - 'A' + 1).next(zipNode.input2).
+                node(begin).string().next(zipNode.input3).
+                node(begin).next(zipNode.input4).
+                node(begin).map(c -> c - 'A' + 1).next(zipNode.input5).
+                node(begin).string().next(zipNode.input6).
+                node(begin).next(zipNode.input7).
+                node(begin).map(c -> c - 'A' + 1).next(zipNode.input8).
+                node(begin).string().next(zipNode.input9).
+                end(endNode).emit();
+
+        assertTrue(endNode.received("A1AA1AA1A", "B2BB2BB2B", "C3CC3CC3C"));
     }
 
     @Test
@@ -292,26 +322,28 @@ public class NodeTest {
     }
 
     private Node<Response, Response> createGraph(final Authenticator authenticator) {
-        final Graph<Response> graph = new Graph<>();
 
-        OutputNode<Response> authCode = graph.action(response -> authenticator.onRequestAuthCode()).node();
+        final Tag<Response> authToken = Tag.create();
+        final Tag<Response> code400 = Tag.create();
+        final Tag<Response> code401 = Tag.create();
 
-        graph.find(authCode).
-                filter(response -> response.statusCode == 200).
-                action(authenticator::onAuthenticationSucceeded);
+        final Node<Response, Response> authFailed = new ActionNode<>(authenticator::onAuthenticationFailed);
+        final Graph<Response> graph = Graph.begin(authToken, response -> authenticator.onRequestAuthCode());
 
-        OutputNode<Response> status400 = graph.find(authCode).filter(response -> response.statusCode == 400).node();
-        OutputNode<Response> status401 = graph.find(authCode).filter(response -> response.statusCode == 401).node();
+        graph.
+            node(authToken).filter(response -> response.statusCode == 200).end(authenticator::onAuthenticationSucceeded).
 
-        Node<Response, Response> failed = new ActionNode<>(authenticator::onAuthenticationFailed);
+            node(authToken).filter(code400, response -> response.statusCode == 400).
+                node(code400).filter(response -> ERROR_A.contentEquals(response.error)).end(authFailed).
+                node(code400).filter(response -> ERROR_B.contentEquals(response.error)).end(authFailed).
 
-        graph.find(status400).filter(response -> ERROR_A.contentEquals(response.error)).next(failed);
-        graph.find(status400).filter(response -> ERROR_B.contentEquals(response.error)).next(failed);
-        graph.find(status401).filter(response -> ERROR_C.contentEquals(response.error)).next(failed);
-        graph.find(status401).filter(response -> ERROR_D.contentEquals(response.error)).next(failed);
-        graph.find(status401).filter(response -> ERROR_E.contentEquals(response.error)).next(failed);
+            node(authToken).filter(code401, response -> response.statusCode == 401).
+                node(code401).filter(response -> ERROR_C.contentEquals(response.error)).end(authFailed).
+                node(code401).filter(response -> ERROR_D.contentEquals(response.error)).end(authFailed).
+                node(code401).filter(response -> ERROR_E.contentEquals(response.error)).end(authFailed);
 
-        return graph.getBegin();
+
+        return graph.getBeginNode();
     }
 
     @SuppressWarnings({"unchecked", "varargs"})

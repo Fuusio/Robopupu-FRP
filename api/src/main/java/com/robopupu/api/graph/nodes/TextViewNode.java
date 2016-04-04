@@ -8,11 +8,21 @@ import com.robopupu.api.graph.AbstractOutputNode;
 
 public class TextViewNode extends AbstractOutputNode<String> implements TextWatcher {
 
+    protected boolean mEnabled;
     private TextView mTextView;
 
     public TextViewNode(final TextView textView) {
         mTextView = textView;
         mTextView.addTextChangedListener(this);
+        mEnabled = true;
+    }
+
+    public boolean isEnabled() {
+        return mEnabled;
+    }
+
+    public void setEnabled(final boolean enabled) {
+        mEnabled = enabled;
     }
 
     @Override
@@ -27,6 +37,8 @@ public class TextViewNode extends AbstractOutputNode<String> implements TextWatc
 
     @Override
     public void afterTextChanged(final Editable editable) {
-        out(editable.toString());
+        if (mEnabled) {
+            out(editable.toString());
+        }
     }
 }
