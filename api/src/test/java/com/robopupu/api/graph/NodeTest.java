@@ -36,12 +36,6 @@ import static org.junit.Assert.assertTrue;
 @SmallTest
 public class NodeTest {
 
-    private static String ERROR_A = "A";
-    private static String ERROR_B = "B";
-    private static String ERROR_C = "C";
-    private static String ERROR_D = "D";
-    private static String ERROR_E = "E";
-
     private TerminalNode<Integer> mEndNode = new TerminalNode<>();
     private List<Integer> mIntList;
 
@@ -230,7 +224,7 @@ public class NodeTest {
         final TerminalNode<String> endNode = new TerminalNode<>();
         final Zip2Node<Character, Integer, String> zipNode =
                 new Zip2Node<>((input1, input2) -> Character.toString(input1) + Integer.toString(input2));
-        final Tag<Character> begin = new Tag<>();
+        final Tag<Character> begin = Tag.create();
 
         Graph.begin(begin, createList('A', 'B', 'C')).
                 node(begin).next(zipNode.input1).
@@ -246,7 +240,7 @@ public class NodeTest {
         final TerminalNode<String> endNode = new TerminalNode<>();
         final Zip3Node<Character, Integer, String, String> zipNode =
                 new Zip3Node<>((input1, input2, input3) -> Character.toString(input1) + Integer.toString(input2) + input3);
-        final Tag<Character> begin = new Tag<>();
+        final Tag<Character> begin = Tag.create();
 
         Graph.begin(begin, createList('A', 'B', 'C')).
                 next(zipNode.input1).
@@ -263,7 +257,7 @@ public class NodeTest {
         final Zip9Node<Character, Integer, String, Character, Integer, String, Character, Integer, String, String> zipNode =
                 new Zip9Node<>((input1, input2, input3, input4, input5, input6, input7, input8, input9) ->
                         Character.toString(input1) + Integer.toString(input2) + input3 + Character.toString(input4) + Integer.toString(input5) + input6 + Character.toString(input7) + Integer.toString(input8) + input9);
-        final Tag<Character> begin = new Tag<>();
+        final Tag<Character> begin = Tag.create();
 
         Graph.begin(begin, createList('A', 'B', 'C')).
                 node(begin).next(zipNode.input1).
@@ -291,7 +285,7 @@ public class NodeTest {
         // Http 400, Error A
 
         response = new Response();
-        response.error = ERROR_A;
+        response.error = Error.A.getErrorMsg();
         response.statusCode = 400;
 
         loginNode = createGraph(authenticator);
@@ -302,7 +296,7 @@ public class NodeTest {
         // Http 401, Error D
 
         response = new Response();
-        response.error = ERROR_D;
+        response.error = Error.D.getErrorMsg();
         response.statusCode = 401;
 
         loginNode = createGraph(authenticator);
@@ -326,22 +320,19 @@ public class NodeTest {
         final Tag<Response> authToken = Tag.create();
         final Tag<Response> code400 = Tag.create();
         final Tag<Response> code401 = Tag.create();
-
-        final Node<Response, Response> authFailed = new ActionNode<>(authenticator::onAuthenticationFailed);
         final Graph<Response> graph = Graph.begin(authToken, response -> authenticator.onRequestAuthCode());
 
         graph.
             node(authToken).filter(response -> response.statusCode == 200).end(authenticator::onAuthenticationSucceeded).
 
-            node(authToken).filter(code400, response -> response.statusCode == 400).
-                node(code400).filter(response -> ERROR_A.contentEquals(response.error)).end(authFailed).
-                node(code400).filter(response -> ERROR_B.contentEquals(response.error)).end(authFailed).
+            node(authToken).tag(code400).filter(response -> response.statusCode == 400).
+                node(code400).filter(Error.A::is).end(authenticator::onAuthenticationFailed).
+                node(code400).filter(Error.B::is).end(authenticator::onAuthenticationFailed).
 
-            node(authToken).filter(code401, response -> response.statusCode == 401).
-                node(code401).filter(response -> ERROR_C.contentEquals(response.error)).end(authFailed).
-                node(code401).filter(response -> ERROR_D.contentEquals(response.error)).end(authFailed).
-                node(code401).filter(response -> ERROR_E.contentEquals(response.error)).end(authFailed);
-
+            node(authToken).tag(code401).filter(response -> response.statusCode == 401).
+                node(code401).filter(Error.C::is).end(authenticator::onAuthenticationFailed).
+                node(code401).filter(Error.D::is).end(authenticator::onAuthenticationFailed).
+                node(code401).filter(Error.E::is).end(authenticator::onAuthenticationFailed);
 
         return graph.getBeginNode();
     }
@@ -352,7 +343,6 @@ public class NodeTest {
         Collections.addAll(list, values);
         return list;
     }
-
 
     private class TerminalNode<T> extends AbstractNode<T, T> {
 
@@ -411,6 +401,28 @@ public class NodeTest {
                 return true;
             }
             return false;
+        }
+    }
+
+    private enum Error {
+        A("A"),
+        B("B"),
+        C("C"),
+        D("D"),
+        E("E");
+
+        private final String mErrorMsg;
+
+        Error(final String errorMsg) {
+            mErrorMsg = errorMsg;
+        }
+
+        public boolean is(final Response response) {
+            return mErrorMsg.contentEquals(response.error);
+        }
+
+        public String getErrorMsg() {
+            return mErrorMsg;
         }
     }
 

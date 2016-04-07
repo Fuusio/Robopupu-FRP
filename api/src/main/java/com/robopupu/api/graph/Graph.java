@@ -40,11 +40,11 @@ import java.util.List;
 public class Graph<T> {
 
     protected final HashMap<Tag, OutputNode<?>> mTaggedNodes;
+    protected final Tag<T> mBeginTag;
 
-    private OutputNode<T> mBeginNode;
-    private Tag<T> mBeginTag;
-    private OutputNode<?> mCurrentNode;
-    private Tag mPendingAttachTag;
+    protected OutputNode<T> mBeginNode;
+    protected OutputNode<?> mCurrentNode;
+    protected Tag mPendingAttachTag;
 
     protected Graph() {
         mBeginTag = new Tag<>();
@@ -52,7 +52,7 @@ public class Graph<T> {
     }
 
     /**
-     * Gest the begin {@link Tag}.
+     * Gets the begin {@link Tag}.
      * @return A {@link Tag}.
      */
     public Tag<T> getBeginTag() {
@@ -183,6 +183,18 @@ public class Graph<T> {
      * @return This {@link Graph}.
      */
     @SuppressWarnings("unchecked")
+    public <OUT> Graph<OUT> n(final Tag<OUT> tag) {
+        mCurrentNode = mTaggedNodes.get(tag);
+        return (Graph<OUT>)this;
+    }
+
+    /**
+     * Finds a {@link OutputNode} tagged with the given {@link Tag} and sets it to be current node.
+     * @param tag A {@link Tag}.
+     * @param <OUT> The output type of the current {@link Node}.
+     * @return This {@link Graph}.
+     */
+    @SuppressWarnings("unchecked")
     public <OUT> Graph<OUT> node(final Tag<OUT> tag) {
         mCurrentNode = mTaggedNodes.get(tag);
         return (Graph<OUT>)this;
@@ -197,6 +209,26 @@ public class Graph<T> {
     @SuppressWarnings("unchecked")
     public <OUT> OutputNode<OUT> findNode(final Tag tag) {
         return (OutputNode<OUT>)mTaggedNodes.get(tag);
+    }
+
+    /**
+     * Attaches an {@link ActionNode} with the given action to the current {@link OutputNode}.
+     * @param action The action as an {@link Action}.
+     * @return This {@link Graph}.
+     */
+    @SuppressWarnings("unchecked")
+    public Graph<T> action(final Action<T> action) {
+        return next(new ActionNode<>(action));
+    }
+
+    /**
+     * Attaches a {@link FunctionNode} with the given mapping function to the current {@link OutputNode}.
+     * @param function The function as a {@link Function}.
+     * @return This {@link Graph}.
+     */
+    @SuppressWarnings("unchecked")
+    public <OUT> Graph<OUT> map(final Function<T, OUT> function) {
+        return next(new FunctionNode<>(function));
     }
 
     /**
@@ -240,29 +272,16 @@ public class Graph<T> {
     }
 
     /**
-     * Attaches the given {@link Node} to be the next {@link Node} after the current {@link Node}.
-     * The attached {@link Node} is tagged with the given tag {@link Object}.
-     * @param findTag The tag {@link Object}.
-     * @param node A {@link Node}.
-     * @return This {@link Graph}.
-     * REMOVE
-    public <OUT> Graph<OUT> from(final Object findTag, final Node<T, OUT> node) {
-        final Graph<T> graph = find(findTag);
-        return graph.next(node);
-    }*/
-
-    /**
      * Attaches the given {@link Node} to the specified {@link OutputNode}.
      * The attached {@link Node} is tagged with the given tag {@link Object}.
-     * @param findTag The tag {@link Object} specifying the current {@link Node}.
-     * @param findTag The tag {@link Object} that is used to tag the attached {@link Node}.
+     * @param attachTag The tag {@link Object} that is used to tag the attached {@link Node}.
      * @param node A {@link Node}.
      * @return This {@link Graph}.
-     * REMOVE
-    public <OUT> Graph<OUT> next(final Object findTag, final Object attachTag, final Node<T, OUT> node) {
-        final Graph<T> graph = to(findTag);
-        return graph.tag(attachTag).next(node);
-    }*/
+     */
+    public <OUT> Graph<OUT> next(final Tag attachTag, final Node<T, OUT> node) {
+        tag(attachTag);
+        return next(node);
+    }
 
     /**
      * Attaches a {@link FilterNode} with the given condition to the current {@link OutputNode}.
@@ -271,19 +290,6 @@ public class Graph<T> {
      */
     @SuppressWarnings("unchecked")
     public Graph<T> filter(final BooleanFunction<T> condition) {
-        return next(new FilterNode<>(condition));
-    }
-
-    /**
-     * Attaches a {@link FilterNode} with the given condition to the current {@link OutputNode}.
-     * The {@link FilterNode} is attached using the given tag.
-     * @param tag A {@link Tag}.
-     * @param condition The condition as a {@link BooleanFunction}.
-     * @return This {@link Graph}.
-     */
-    @SuppressWarnings("unchecked")
-    public Graph<T> filter(final Tag<T> tag, final BooleanFunction<T> condition) {
-        tag(tag);
         return next(new FilterNode<>(condition));
     }
 
@@ -343,26 +349,6 @@ public class Graph<T> {
     @SuppressWarnings("unchecked")
     public Graph<T> take(final int steps) {
         return next(new TakeNode<>(steps));
-    }
-
-    /**
-     * Attaches an {@link ActionNode} with the given action to the current {@link OutputNode}.
-     * @param action The action as an {@link Action}.
-     * @return This {@link Graph}.
-     */
-    @SuppressWarnings("unchecked")
-    public Graph<T> action(final Action<T> action) {
-        return next(new ActionNode<>(action));
-    }
-
-    /**
-     * Attaches a {@link FunctionNode} with the given mapping function to the current {@link OutputNode}.
-     * @param function The function as a {@link Function}.
-     * @return This {@link Graph}.
-     */
-    @SuppressWarnings("unchecked")
-    public <OUT> Graph<OUT> map(final Function<T, OUT> function) {
-        return next(new FunctionNode<>(function));
     }
 
     /**
